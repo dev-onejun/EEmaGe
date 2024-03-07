@@ -20,6 +20,9 @@ Visual reconstruction from EEG has been paved with the advancement of AI. Recent
 * Generative Adversarial Networks (GANs)
 * Brain-Computer Interface (BCI)
 * Self-Supervised Learning (SSL)
+* functional Magnetic Resonance Imaging (fMRI)
+* Near-infrared spectroscopy (NIRS)
+* Magnetoencephalography (MEG)
 
 **Keywords**
 * Parallel Gradient Descent
@@ -54,7 +57,14 @@ In conclusion, the paper conducts and expects to the following bullet points;
 
 ## II. Related Works
 
-**A. EEG**
+**A. Brain-Computer Interface**
+
+BCI has been researched for several purposes. Aligning with its name,
+BCI.
+
+A few methods to measure brain signals exist such as fMRI, NIRS, MEG, and EEG. Especially, fMRI shows the best performance in visual reconstruction so far. [].
+
+On the other hand, EEG is .
 
 **B. AI?**
 
@@ -63,7 +73,9 @@ In conclusion, the paper conducts and expects to the following bullet points;
 Palazzo et al [6] firstly founded that visual experience can be generated from EEG signals. The research recorded the signals while presenting the ImageNet [7] dataset to subjects. Although the research firstly founded that visual experience can be generated from EEG signals, the proposed method were limited to the dataset category since it relied on supervised learning.
 NeuroVision
 
-## III. Experiment
+## III. Methodology
+
+**A. Dataset?**
 
 **A. EEmaGe**
 
@@ -90,6 +102,8 @@ loss function - mse
 **B. Experimental Results**
 
 ## V. Conclusion
+
+The novel framework, EEmaGe, has successfully reconstructed human vision. EEmaGe has two goals: to eliminate the need for supervision in constructing the human visual system and to exclude visual cues from extracting EEG features. The first goal is achieved by adopting an autoencoder architecture while training SSL. The second goal is achieved by the downstream task which inferences original images with the trained EEG encoder and image decoder. These goals lead to an ultimate goal that restores the human vision with any EEG signals. The availability of chances to change the image decoder in the downstream task supports that our EEG encoder robustly extracts a generalized EEG features as well as the restoration of the real world is possible if decoders is enabled to represent all stuffs in lives. As a result, these approaches are expected to further advance the development of generalized BCI.
 
 ## References
 
