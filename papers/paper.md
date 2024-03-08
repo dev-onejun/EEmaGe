@@ -66,25 +66,36 @@ A few methods to measure brain signals exist such as fMRI, NIRS, MEG, and EEG. E
 
 On the other hand, EEG is .
 
-**B. AI?**
+The EEG brain waves are categorized by their frequency into four different groups, beta ( > 13Hz), alpha (8-13Hz), theta (4-8Hz), and delta (0.5-4Hz) [5]. *Gamma ? in Palazzo.* While an alpha wave dominates the brain waves during the activities that the eyes are closed, a beta wave is activated when the eyes are opened.
 
-**B. Visual Reconstruction**
+**B. EEG-Image Pair Datasets**
 
-Palazzo et al [6] firstly founded that visual experience can be generated from EEG signals. The research recorded the signals while presenting the ImageNet [7] dataset to subjects. Although the research firstly founded that visual experience can be generated from EEG signals, the proposed method were limited to the dataset category since it relied on supervised learning.
+In the task of visual reconstruction, three qualified datasets are available. Yet, Thoughtviz [13] dataset, originated from Kumar, et al. [14] which collected an EEG dataset for the speech recognition task, utilized imaginary images of participants. The dataset collected by relying on the thought of the participants has an alpha wave data induced by thinking. In fact, the EEG beta waves are dominant while the eyes open [5]. Palazzo, et al [6] collected the pairs of EEG and image data from six participants. The ImageNet subset, consisting of fifty images per class where the number of the class is forty, were selected by those researchers. Consequently, 12,000 EEG sequences (2000 images * 6 participants) were gathered via 128 EEG channels. few samples were excluded through preprocessing so that 11,466 valid *(sequences ? samples?)* were accounted for the opened dataset.
+
+[12]
+
+*[13] is a imaginary image task while collecting EEG dataset so that emerged EEG can be different from the stimuli of the vision. (The activated part ? the signal frequency ?) of the brain is different in vision and imaginary. Specifically, the research used speech recognition dataset collected by another research which participants were thought one of the 10 digits (0-9) Alpha activity is induced by thinking while perceivelab shows 55/95.*
+
+**C. Visual Reconstruction With AI**
+
+Palazzo et al [6] firstly founded that visual experience can be generated from EEG signals. The research recorded the signals while presenting the subset of ImageNet [7] dataset to subjects. Although the research firstly founded that visual experience can be generated from EEG signals, the proposed method were limited to the dataset category since it relied on supervised learning.
 NeuroVision
 
 ## III. Methodology
 
-**A. Dataset?**
+**A. Dataset Usages**
 
-**A. EEmaGe**
+Hinged on the fact that the beta wave is required to reconstruct visual stimuli as same as possible, Perceivelab-Dataset [6] is well-suited for the purpose of this work.
+
+
+**B. EEmaGe**
 
 **WHY DID YOU MAKE THE MODEL LIKE THIS?**
 In order to achieve the goals of the research which is the exclusion of the supervision in the reconstruction task, self-supervised learning is adopted to implement a model training. Autoencoder is a representative self-supervised learning method hinged on neural net architectures.
 
-EEmaGe is an autoencoder-based model architecture which gets an input (*e*, *i*) pair where *e* is an EEG and *i* is an image. The pair is shuffled from its own pair matched by original datasets. (***or make all possible pairs to maximize the number of the data*** ) Two autoencoders which their encoders share weights with each others comprise the architecture.
+EEmaGe is an autoencoder-based model architecture which gets an input \\( (e, i) \\) pair where \\( e \\) is an EEG and \\( i \\) is an image. The pair is shuffled from its own pair matched by original datasets. (***or make all possible pairs to maximize the number of the data*** ) Two autoencoders which their encoders share weights with each others comprise the architecture.
 
-**B. Downstream Tasks**
+**C. Downstream Task**
 
 In this research, a downstream task is defined as reconstructing images from EEG signals with an autoencoder. The autoencoder is made up of the EEG encoder and the image decoder from EEmaGe. Inferences of the autoencoder solely implement to make the images.
 
@@ -100,6 +111,8 @@ loss function - mse
 ***WHY DID YOU CHOOSE MSE AS LOSS FUNCTION*** (https://www.sciencedirect.com/science/article/pii/S0141029624001329 need more compelling resources)
 
 **B. Experimental Results**
+
+**Evaluation**
 
 ## V. Conclusion
 
@@ -118,3 +131,6 @@ The novel framework, EEmaGe, has successfully reconstructed human vision. EEmaGe
 * [9] P. Singh, P. Pandey, K. Miyapuram and S. Raman, "EEG2IMAGE: Image Reconstruction from EEG Brain Signals," ICASSP 2023 - 2023 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Rhodes Island, Greece, 2023, pp. 1-5, doi: 10.1109/ICASSP49357.2023.10096587. [IEEE]
 * [10] Vidal, Jacques J. "Toward direct brain-computer communication." Annual review of Biophysics and Bioengineering 2.1 (1973): 157-180. [MLA]
 * [11] https://www.kaggle.com/competitions/hms-harmful-brain-activity-classification/overview , accessed in Mar 4 2024. []
+* [12] Kaneshiro B, Perreau Guimaraes M, Kim HS, Norcia AM, and Suppes P (2015). EEG data analyzed in "A Representational Similarity Analysis of the Dynamics of Object Processing Using Single-Trial EEG Classification". Stanford Digital Repository. Available at: http://purl.stanford.edu/bq914sc3730 [Dataset]
+* [13] Tirupattur, Praveen, et al. "Thoughtviz: Visualizing human thoughts using generative adversarial network." Proceedings of the 26th ACM international conference on Multimedia. 2018. [MLA]
+* [14] Kumar, Pradeep, et al. "Envisioned speech recognition using EEG sensors." Personal and Ubiquitous Computing 22 (2018): 185-199. [MLA]
