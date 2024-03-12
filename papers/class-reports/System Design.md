@@ -27,7 +27,7 @@ $$ \mathbf{Acronym / Abbreviation} \\
 
 Objects always exist regardless of someone's perception. This influenced that the definitions of looking, seeing, and watching are different. Looking is to toward eyes somewhere, seeing is to perceive things what eyes direct, and watching is to spend time and pay attention to the things [12]. In other words, 'looking' belongs to the 'seeing' set and 'seeing' belongs to the 'watching' set. The visual system of humans performs looking, meaning that, supervision is not required to imitate the system.
 
-BCI, firstly proposed by Vidal [13], has seeked to the key of the human brain where the area has yet been conquered. Disabled people are expected to be benefited to live real lives with others, if BCI researches continuously evolve. Among the methodlogies of BCIs, EEG analysis has especially been drawn attention due to its advantages, non-invasive and cost-effectie sensors which are utilized during brain measurements. The analysis, which uses a signal recorded electrical activities of brains [10], is pervasively adopted in medical and research areas to diagnose brain diseases. Even though its effectiveness in those areas, EEG required manual analysis of experts like physicians and researchers [14].
+BCI, firstly proposed by Vidal [13], has seeked to the key of the human brain where the area has yet been conquered. Disabled people are expected to be benefited to live real lives with non-disabled people, if BCI researches continuously evolve. Among the methodlogies of BCIs, EEG analysis has especially been drawn attention due to its advantages, non-invasive and cost-effectie sensors which are utilized during brain measurements. The analysis, which uses a signal recorded electrical activities of brains [10], is pervasively adopted in medical and research areas to diagnose brain diseases. Even though its effectiveness in those areas, EEG required manual analysis of experts like physicians and researchers [14].
 
 인공지능, 그 속에서도 기계학습은 크게 Supervised Learning, Self-Supervised Learning, Semi-Supervised Learning, Reinforcement Learning의 4가지로 분류합니다. 지금까지의 연구 대부분은 Image와 해당 Image를 바라보는 피험자에게서 관측한 EEG Signal을 Input과 Label(정답)로 연결하여, 주어진 EEG Signal이 정답 Image와 유사한 Image를 재현해내도록 학습하는 Supervised-Learning 방식으로 진행했습니다.
 
@@ -78,18 +78,18 @@ The paper reviewed the system design that planned in the last semester. The proj
 
 Focusing back on the image reconstruction, SSL and its downstream task has still adopted for the current model to achieve the exclusion of the supervision. EEmaGe is an autoencoder-based model architecture which gets an input $(e, i)$ pair where $e$ is an EEG and $i$ is an image.
 
-**Training** Two autoencoders which their encoders share weights with themselves comprise the architecture. Those autoencoders are back-propagated at the same time with a loss function MSE $\cdots (1)$. Specifically, the loss function of the compounded model is a sum of a loss from the EEG autoencoder $L_{\text{eeg}}$ and a loss from the image autoencoder $L_\text{image}$. The formula is written in $\cdots (2)$.
+**Training** Two autoencoders which their encoders share weights with themselves comprise the architecture. Each encoder has a preprocessing block to feed-forward into the same encoder structure. Those autoencoders are back-propagated at the same time with a loss function MSE $\cdots (1)$. Specifically, the loss function of the compounded model is a sum of a loss from the EEG autoencoder $L_{\text{eeg}}$ and a loss from the image autoencoder $L_\text{image}$. The formula is written in $\cdots (2)$.
 
 $$
 (1)\ \text{MSE} = {1 \over n} \sum_{i=1}^n {(Y_i - \hat{Y_i})}^2 \\
 (2)\ \text{Loss} = L_{\text{eeg}} + L_{\text{image}}
 $$
 
-**Downstream Task** A downstream task is defined as reconstructing images from EEG signals with an autoencoder. Transferring the EEG encoder and the image decoder from EEmage, inferences of the autoencoder implement to generate images. This task can be differentiated with **1)** utilizing the autoencoder as a foundation model itself and **2)** fine-tuning the autoencoder to maximize its performance. We will present the two cases to sound the performance of EEmaGe.
+**Downstream Task** A downstream task is defined as reconstructing images from EEG signals with an autoencoder. Transferring the EEG encoder and the image decoder from EEmage, inferences of the autoencoder implement to generate images. This task can be differentiated with **1)** utilizing the autoencoder as a foundation model itself and **2)** fine-tuning the autoencoder to maximize its performance. Even though **2)** contains the supervision, the novelty of the research is still found on the proposal of the EEG foundational model. We will present the two cases to sound the performance of EEmaGe.
 
 #### B. Performance Evaluation
 
-To evaluate the performance, FID [15], the current standard metric to access generative models, is planned to use. Unlike IS which evaluates the distribution of the generated images, FID evaluates the distributions from the original images to the generated images.
+To evaluate the performance, FID [15], the current standard metric to assess generative models, is planned to use. Unlike IS which evaluates the distribution of the generated images, FID evaluates the distributions from the original images to the generated images.
 
 ## IV. Implementation
 
@@ -109,7 +109,7 @@ A bare metal computer, equipped with Intel i5-10400F CPU, GTX 1660Ti GPU, and tw
 
 ## V. Conclusion
 
-As a new semester has been started, the report inspects the design of the system called EEmaGe. This framework was formulated to reconstruct human experience from EEG signals. Checking how the system and its compoments were designed concretely, albeit the details of the components have been compounded, the report concludes that our design conducted in the last semester has been compelling to develop. We expect that this approach ultimately contributes to develop a general BCI application.
+As a new semester has been started, the report inspects the design of the system called EEmaGe. This framework was formulated to reconstruct human experience from EEG signals. Checking how the system and its compoments were designed concretely, the details of the components have been compounded. The report concludes that our design conducted in the last semester has been compelling to develop. We expect that this approach ultimately contributes to develop a general BCI application.
 
 ## References
 
