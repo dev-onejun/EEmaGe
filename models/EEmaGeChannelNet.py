@@ -1,8 +1,8 @@
 from torch import nn
 import torchsummary
 
-from EEGChannelNet import EEGFeaturesExtractor
-from base import ImageFeaturesExtractor, EEGDecoder, ImageDecoder
+from .EEGChannelNet import EEGFeaturesExtractor
+from .base import ImageFeatureExtractor, EEGDecoder, ImageDecoder
 
 
 class Encoder(nn.Module):
@@ -29,7 +29,7 @@ class EEmaGeChannelNet(nn.Module):
             EEGFeaturesExtractor(), nn.Linear(500, input_dim), nn.ReLU(True)
         )
         self.image_feature_extractor = nn.Sequential(
-            ImageFeaturesExtractor(), nn.Linear(2048, input_dim), nn.ReLU(True)
+            ImageFeatureExtractor(), nn.Linear(2048, input_dim), nn.ReLU(True)
         )
 
         self.encoder = Encoder(
@@ -38,8 +38,8 @@ class EEmaGeChannelNet(nn.Module):
             hidden_dim2,
         )
 
-        self.eeg_decoder = EEGDecoder(hidden_dim2)
-        self.image_decoder = ImageDecoder(hidden_dim2)
+        self.eeg_decoder = EEGDecoder(hidden_dim2, 450560)
+        self.image_decoder = ImageDecoder()
 
     def forward(self, eeg, image):
         eeg_features = self.eeg_feature_extractor(eeg)

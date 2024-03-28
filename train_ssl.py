@@ -247,7 +247,7 @@ def train_ssl(train_loader, test_loader, model, n_epochs, lr, resume=False):
 
 
 def main():
-    model = EEmaGe()
+    model = EEmaGeChannelNet()
 
     if args.resume:
         resume = True

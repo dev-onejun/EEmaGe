@@ -8,7 +8,6 @@ EEmaGe Base Model
 """
 
 from torch import nn
-from torch import rand
 from torchsummary import summary
 from torchvision import models
 
@@ -125,7 +124,7 @@ class ImageFeatureExtractor(nn.Module):
             nn.ReLU(),
         )
 
-        for parameters in model.parameters():
+        for parameters in self.image_feature_extractor.parameters():
             parameters.requires_grad = False
 
     def forward(self, image):

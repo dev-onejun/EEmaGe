@@ -1,2 +1,3 @@
 from .base import *
-from .EEmaGe import *
+from .EEGChannelNet import *
+from .EEmaGeChannelNet import *
