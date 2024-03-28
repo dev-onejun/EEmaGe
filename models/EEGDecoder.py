@@ -8,10 +8,13 @@ from torch import nn
 
 
 class EEGDecoder(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, embedding_dim=450560):
         super(EEGDecoder, self).__init__()
 
-        self.linear = nn.Linear(input_dim, 110)
+        self.linear = nn.Sequential(
+            nn.Linear(input_dim, embedding_dim),
+            nn.ReLU(),
+        )
 
         self.decoder = nn.Sequential(
             nn.ConvTranspose1d(8192, 4096, 3),  # 55, 4096
@@ -28,10 +31,7 @@ class EEGDecoder(nn.Module):
         )
 
     def forward(self, eeg_x):
-        # eeg_out = self.linear(eeg_x)  # 450560
-
-        eeg_out = eeg_x.view(-1, 8192, 55)
-
+        eeg_out = self.linear(eeg_x)  # 450560
+        eeg_out = eeg_out.view(-1, 8192, 55)
         eeg_out = self.decoder(eeg_out)  # 440, 128
-
         return eeg_out

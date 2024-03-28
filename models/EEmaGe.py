@@ -1,7 +1,10 @@
 from torch import nn
+import torchsummary
+
 from EEGChannelNet import EEGFeaturesExtractor
 from Inception_v3 import ImageFeaturesExtractor
 from EEGDecoder import EEGDecoder
+from ImageDecoder import ImageDecoder
 
 
 class Encoder(nn.Module):
@@ -17,22 +20,6 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         out = self.encoder(x)
-        return out
-
-
-class Decoder(nn.Module):
-    def __init__(self, hidden_dim2, hidden_dim1, input_dim):
-        super(Decoder, self).__init__()
-
-        self.decoder = nn.Sequential(
-            nn.Linear(hidden_dim2, hidden_dim1),
-            nn.ReLU(),
-            nn.Linear(hidden_dim1, input_dim),
-            nn.ReLU(),
-        )
-
-    def forward(self, x):
-        out = self.decoder(x)
         return out
 
 
@@ -54,11 +41,7 @@ class EEmaGe(nn.Module):
         )
 
         self.eeg_decoder = EEGDecoder(hidden_dim2)
-        self.image_decoder = Decoder(
-            hidden_dim2,
-            hidden_dim1,
-            input_dim,
-        )
+        self.image_decoder = ImageDecoder(hidden_dim2)
 
     def forward(self, eeg, image):
         eeg_features = self.eeg_feature_extractor(eeg)
@@ -71,3 +54,7 @@ class EEmaGe(nn.Module):
         image_out = self.image_decoder(common_image_features)
 
         return eeg_out, image_out
+
+
+if __name__ == "__main__":
+    torchsummary.summary(EEmaGe(), [(1, 128, 440), (3, 299, 299)])
