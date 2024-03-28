@@ -1,5 +1,6 @@
 from torch import nn
 from models.EEGChannelNet import EEGFeaturesExtractor
+from models.Inception_v3 import ImageFeaturesExtractor
 
 
 class Encoder(nn.Module):
@@ -41,6 +42,9 @@ class EEmaGe(nn.Module):
         self.eeg_feature_extractor = nn.Sequential(
             EEGFeaturesExtractor(), nn.Linear(500, input_dim), nn.ReLU(True)
         )
+        self.image_feature_extractor = nn.Sequential(
+            ImageFeaturesExtractor(), nn.Linear(2048, input_dim), nn.ReLU(True)
+        )
 
         self.encoder = Encoder(
             input_dim,
@@ -61,11 +65,12 @@ class EEmaGe(nn.Module):
 
     def forward(self, eeg, image):
         eeg_features = self.eeg_feature_extractor(eeg)
-        image_features = image
+        image_features = self.image_feature_extractor(image)
 
         common_eeg_features = self.encoder(eeg_features)
         common_image_features = self.encoder(image_features)
 
         eeg_out = self.eeg_decoder(common_eeg_features)
         image_out = self.image_decoder(common_image_features)
+
         return eeg_out, image_out
