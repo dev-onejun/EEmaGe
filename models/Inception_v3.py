@@ -3,7 +3,8 @@ from torchvision import models
 
 inception_v3 = models.inception_v3(weights="IMAGENET1K_V1")
 inception_v3.fc = nn.Identity()  # type: ignore
-# inception_v3.eval()
+for parameter in inception_v3.parameters():
+    parameter.requires_grad = False
 
 
 class ImageFeaturesExtractor(nn.Module):
