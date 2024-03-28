@@ -35,10 +35,12 @@ class Decoder(nn.Module):
 
 
 class EEmaGe(nn.Module):
-    def __init__(self, input_dim, hidden_dim1, hidden_dim2):
+    def __init__(self, input_dim=4096, hidden_dim1=2048, hidden_dim2=1024):
         super(EEmaGe, self).__init__()
 
-        self.eeg_feature_extractor = EEGFeaturesExtractor()
+        self.eeg_feature_extractor = nn.Sequential(
+            EEGFeaturesExtractor(), nn.Linear(500, input_dim), nn.ReLU(True)
+        )
 
         self.encoder = Encoder(
             input_dim,
