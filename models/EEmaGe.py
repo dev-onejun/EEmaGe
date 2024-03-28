@@ -1,6 +1,6 @@
 from torch import nn
-from models.EEGChannelNet import EEGFeaturesExtractor
-from models.Inception_v3 import ImageFeaturesExtractor
+from EEGChannelNet import EEGFeaturesExtractor
+from Inception_v3 import ImageFeaturesExtractor
 
 
 class Encoder(nn.Module):
