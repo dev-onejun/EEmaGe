@@ -125,6 +125,9 @@ class ImageFeatureExtractor(nn.Module):
             nn.ReLU(),
         )
 
+        for parameters in model.parameters():
+            parameters.requires_grad = False
+
     def forward(self, image):
         image_features = self.image_feature_extractor(image)  # 1, 1, 2048
         image_features = image_features.view(image_features.size(0), -1)  # 2048
