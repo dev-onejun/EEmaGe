@@ -28,11 +28,15 @@ Citations
 """
 
 import torch
+from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
 
 import os
 
+
+time_low = 20
+time_high = 460
 
 # Image Trasnform
 transform = transforms.Compose(
@@ -42,17 +46,14 @@ transform = transforms.Compose(
     ]
 )
 
-time_low = 20
-time_high = 460
-
 
 # Dataset class
-class Dataset:
+class Dataset(Dataset):
 
     # Constructor
-    def __init__(self, eeg_signals_path):
+    def __init__(self, data_path):
         # Load EEG signals
-        loaded = torch.load(eeg_signals_path)
+        loaded = torch.load(data_path)
         self.data = loaded["dataset"]
 
         self.images = loaded["images"]

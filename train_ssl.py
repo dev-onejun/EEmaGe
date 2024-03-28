@@ -3,13 +3,12 @@ from torch import nn
 from torch.utils import data
 from torch.utils.tensorboard.writer import SummaryWriter
 
-from datasets.perceivelab import Dataset
-from models.autoencoders import Autoencoders, ConvAutoencoder
+from datasets import Dataset
+from models import EEmaGe
 from train_helpers import load_losses, save_losses
 
 import os
 import argparse
-
 from tqdm import tqdm
 
 root = os.path.dirname(__file__)
@@ -247,7 +246,7 @@ def train_ssl(train_loader, test_loader, model, n_epochs, lr, resume=False):
 
 
 def main():
-    model = Autoencoders(input_dim=64, hidden_dim1=32, hidden_dim2=16)
+    model = EEmaGe()
 
     if args.resume:
         resume = True
@@ -261,21 +260,19 @@ def main():
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
-    train_dataset = Dataset(preprocessed_files=args.train_data)
-    test_dataset = Dataset(preprocessed_files=args.test_data)
+    train_dataset = Dataset(args.train_data)
+    test_dataset = Dataset(args.test_data)
 
     train_loader = data.DataLoader(
         train_dataset,
-        collate_fn=train_dataset.collate_fn,
         batch_size=args.batch_size,
         shuffle=True,
         num_workers=args.number_workers,
     )
     test_loader = data.DataLoader(
         test_dataset,
-        collate_fn=test_dataset.collate_fn,
         batch_size=args.batch_size,
-        shuffle=True,
+        shuffle=False,
         num_workers=args.number_workers,
     )
 
