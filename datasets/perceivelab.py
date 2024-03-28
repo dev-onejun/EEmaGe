@@ -58,7 +58,8 @@ class Dataset(Dataset):
 
         self.images = loaded["images"]
         self.images = [
-            os.path.join("data/imagenet/train", x[:9], x + ".JPEG") for x in self.images
+            os.path.join("data/imagenet/train", image[:9], image + ".JPEG")
+            for image in self.images
         ]
 
         # Compute size
