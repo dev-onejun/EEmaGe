@@ -1,6 +1,7 @@
 from torch import nn
 from EEGChannelNet import EEGFeaturesExtractor
 from Inception_v3 import ImageFeaturesExtractor
+from EEGDecoder import EEGDecoder
 
 
 class Encoder(nn.Module):
@@ -52,11 +53,7 @@ class EEmaGe(nn.Module):
             hidden_dim2,
         )
 
-        self.eeg_decoder = Decoder(
-            hidden_dim2,
-            hidden_dim1,
-            input_dim,
-        )
+        self.eeg_decoder = EEGDecoder(hidden_dim2)
         self.image_decoder = Decoder(
             hidden_dim2,
             hidden_dim1,
