@@ -4,7 +4,8 @@ from torch.utils import data
 from torch.utils.tensorboard.writer import SummaryWriter
 
 from datasets import Dataset
-from models import EEmaGe
+from models.base import Base
+from models.EEmaGeChannelNet import EEmaGeChannelNet
 from train_helpers import load_losses, save_losses
 
 import os

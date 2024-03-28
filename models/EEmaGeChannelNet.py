@@ -2,9 +2,7 @@ from torch import nn
 import torchsummary
 
 from EEGChannelNet import EEGFeaturesExtractor
-from Inception_v3 import ImageFeaturesExtractor
-from EEGDecoder import EEGDecoder
-from ImageDecoder import ImageDecoder
+from base import ImageFeaturesExtractor, EEGDecoder, ImageDecoder
 
 
 class Encoder(nn.Module):
@@ -23,9 +21,9 @@ class Encoder(nn.Module):
         return out
 
 
-class EEmaGe(nn.Module):
+class EEmaGeChannelNet(nn.Module):
     def __init__(self, input_dim=4096, hidden_dim1=2048, hidden_dim2=1024):
-        super(EEmaGe, self).__init__()
+        super(EEmaGeChannelNet, self).__init__()
 
         self.eeg_feature_extractor = nn.Sequential(
             EEGFeaturesExtractor(), nn.Linear(500, input_dim), nn.ReLU(True)
