@@ -83,7 +83,7 @@ class EEGFeaturesExtractor(nn.Module):
 
         out = self.final_conv(out)
 
-        out = out.view(-1)
+        out = out.view(out.size(0), -1)
 
         return out
 
