@@ -4,3 +4,5 @@
 
 runs/
 datasets/perceivelab-dataset
+
+.vscode/
