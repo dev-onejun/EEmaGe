@@ -3,7 +3,7 @@ from torch import nn
 from torch.utils import data
 from torch.utils.tensorboard.writer import SummaryWriter
 
-# from datasets. import NormalDataset
+from datasets.perceivelab import Dataset
 from models.autoencoders import Autoencoders, ConvAutoencoder
 from train_helpers import load_losses, save_losses
 
@@ -88,6 +88,19 @@ parser.add_argument(
     type=str,
     default="checkpoint",
     help="path to save the final mode",
+)
+
+parser.add_argument(
+    "--train-data",
+    type=str,
+    default="./datasets/perceivelab.pth",
+    help="path for training dataset (default: ./datasets/perceivelab.pth)",
+)
+parser.add_argument(
+    "--test-data",
+    type=str,
+    default="./datasets/perceivlab.pth",
+    help="path for test dataset (default: ./datasets/perceivelab.pth)",
 )
 
 args = parser.parse_args()
@@ -248,8 +261,8 @@ def main():
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
-    train_dataset = False  # = NormalDataset(raw_data_files=args.train_data)
-    test_dataset = False
+    train_dataset = Dataset(preprocessed_files=args.train_data)
+    test_dataset = Dataset(preprocessed_files=args.test_data)
 
     train_loader = data.DataLoader(
         train_dataset,
