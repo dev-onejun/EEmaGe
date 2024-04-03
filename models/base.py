@@ -29,31 +29,44 @@ class Encoder(nn.Module):
 
 
 class EEGDecoder(nn.Module):
-    def __init__(self, input_dim, embedding_dim):
+    def __init__(self, eeg_channel_num, feature_num, input_dim):
         super(EEGDecoder, self).__init__()
 
         self.linear = nn.Sequential(
-            nn.Linear(input_dim, embedding_dim),
+            nn.Linear(input_dim, eeg_channel_num * feature_num * 2 * 2),
             nn.ReLU(),
         )
 
         self.decoder = nn.Sequential(
-            nn.ConvTranspose1d(8192, 4096, 3),  # 55, 4096
+            nn.ConvTranspose1d(
+                eeg_channel_num * feature_num * 2 * 2,
+                eeg_channel_num * feature_num * 2,
+                3,
+            ),  # (55, )
             nn.ReLU(),
-            nn.Upsample(scale_factor=2),  # 110, 4096
-            nn.ConvTranspose1d(4096, 2048, 3),  # 110, 2048
+            nn.Upsample(scale_factor=2),  # (110, )
+            nn.ConvTranspose1d(
+                eeg_channel_num * feature_num * 2, eeg_channel_num * feature_num, 3
+            ),  # (110, )
             nn.ReLU(),
-            nn.Upsample(scale_factor=2),  # 220, 2048
-            nn.ConvTranspose1d(2048, 128, 3),  # 220, 128
+            nn.Upsample(scale_factor=2),  # (220, )
+            nn.ConvTranspose1d(
+                eeg_channel_num * feature_num,
+                eeg_channel_num,
+                3,
+            ),  # (220, 128)
             nn.ReLU(),
             nn.Upsample(scale_factor=2),  # 440, 128
-            nn.ConvTranspose1d(128, 128, 3),  # 440, 128
+            nn.ConvTranspose1d(eeg_channel_num, eeg_channel_num, 3),  # 440, 128
             nn.Sigmoid(),
         )
 
+        self.eeg_channel_num = eeg_channel_num
+        self.feature_num = feature_num
+
     def forward(self, eeg_x):
-        eeg_out = self.linear(eeg_x)  # 450560
-        eeg_out = eeg_out.view(-1, 8192, 55)
+        eeg_out = self.linear(eeg_x)
+        eeg_out = eeg_out.view(-1, self.eeg_channel_num * self.feature_num * 2 * 2, 55)
         eeg_out = self.decoder(eeg_out)  # 440, 128
         return eeg_out
 
@@ -84,31 +97,43 @@ class ImageDecoder(nn.Module):
 
 
 class EEGFeatureExtractor(nn.Module):
-    def __init__(self, embedding_dim):
+    def __init__(self, eeg_channel_num, feature_num, encoder_input_dim):
         super(EEGFeatureExtractor, self).__init__()
 
         self.eeg_feature_extractor = nn.Sequential(
-            nn.Conv1d(128, 2048, 1),
+            nn.Conv1d(
+                eeg_channel_num,
+                eeg_channel_num * feature_num,
+                1,
+            ),
             nn.ReLU(),
             nn.MaxPool1d(2),  # 220, 2048
-            nn.Conv1d(2048, 4096, 1),
+            nn.Conv1d(
+                eeg_channel_num * feature_num,
+                eeg_channel_num * feature_num * 2,
+                1,
+            ),
             nn.ReLU(),
             nn.MaxPool1d(2),  # 110, 4096
-            nn.Conv1d(4096, 8192, 1),
+            nn.Conv1d(
+                eeg_channel_num * feature_num * 2,
+                eeg_channel_num * feature_num * 2 * 2,
+                1,
+            ),
             nn.ReLU(),
             nn.MaxPool1d(2),  # 55, 8192
         )
 
         self.linear = nn.Sequential(
-            nn.Linear(embedding_dim, 4096),
+            nn.Linear(eeg_channel_num * feature_num * 2 * 2, encoder_input_dim),
             nn.ReLU(),
         )
 
-        self.embedding_dim = embedding_dim
+        self.embedding_dim = eeg_channel_num * feature_num * 2 * 2
 
     def forward(self, eeg):
         eeg_features = self.eeg_feature_extractor(eeg)
-        eeg_features = eeg_features.view(-1, self.embedding_dim)  # 450560
+        eeg_features = eeg_features.view(-1, self.embedding_dim)
         eeg_features = self.linear(eeg_features)
         return eeg_features
 
@@ -136,20 +161,28 @@ class ImageFeatureExtractor(nn.Module):
 
 
 class Base(nn.Module):
-    def __init__(self):
+    def __init__(self, eeg_channel_num=128, feature_num=16):
         super(Base, self).__init__()
 
-        self.eeg_feature_extractor = EEGFeatureExtractor(450560)
+        self.ENCODER_INPUT_DIM = 4096
+
+        self.eeg_feature_extractor = EEGFeatureExtractor(
+            eeg_channel_num, feature_num, self.ENCODER_INPUT_DIM
+        )
         self.image_feature_extractor = ImageFeatureExtractor()
 
-        self.encoder = Encoder(4096, 2048, 1024)
+        self.encoder = Encoder(
+            self.ENCODER_INPUT_DIM,
+            self.ENCODER_INPUT_DIM // 2,
+            (self.ENCODER_INPUT_DIM // 2) // 2,
+        )
 
-        self.eeg_decoder = EEGDecoder(1024, 450560)
+        self.eeg_decoder = EEGDecoder(
+            eeg_channel_num, feature_num, (self.ENCODER_INPUT_DIM // 2) // 2
+        )
         self.image_decoder = ImageDecoder()
 
     def forward(self, eeg, image):
-        """eeg = (440, 128) / image = (299, 299, 3)"""
-
         eeg_features = self.eeg_feature_extractor(eeg)  # 4096
         image_features = self.image_feature_extractor(image)  # 4096
 
@@ -164,7 +197,7 @@ class Base(nn.Module):
 
 if __name__ == "__main__":
     """
-    (440, 128) ->[conv1d] (440, 2048) ->[maxpooling] (220, 2048)
+    (440, 128) ->[conv1d] (440, 2048) ->[maxpooling] (220, 2048)        [ x 16 해놨는데, x 8로? ]
             ->[conv1d] (220, 4096) ->[maxpooling] (110, 4096)
             ->[conv1d] (110, 8192) ->[maxpooling] (55, 8192)
             ->[flatten] (450560) ->[Dense] (4096)
@@ -179,6 +212,12 @@ if __name__ == "__main__":
             ->[Deconv] (110, 2048) ->[Upsampling] (220, 2048)
             ->[Deconv] (220, 128) ->[Upsampling] (440, 128)
             ->[Deconv] (440, 128)
+    """
+    """
+    (440, 128) ->[] (440, 128*8 = 1024) ->[maxpooling] (220, 1024)
+            ->[conv1d] (220, 128*8*2 = 2048) ->[] (110, 2048)
+            ->[conv1d] (110, 128*8*2*2 = 4096) ->[] (55, 4096)
+            ->[flatten] (225280) ->[Dense] (4096)
     """
 
     """
@@ -198,7 +237,7 @@ if __name__ == "__main__":
             ->[Deconv] (299, 299, 3)
     """
 
-    model = Base()
+    model = Base(128, 8)
     summary(model, [(128, 440), (3, 299, 299)], device="cpu")
     # model = EEGFeatureExtractor(450560)
     # summary(model, (128, 440), device="cpu")

@@ -55,4 +55,4 @@ class EEmaGeChannelNet(nn.Module):
 
 
 if __name__ == "__main__":
-    torchsummary.summary(EEmaGe(), [(1, 128, 440), (3, 299, 299)])
+    torchsummary.summary(EEmaGeChannelNet(), [(1, 128, 440), (3, 299, 299)])

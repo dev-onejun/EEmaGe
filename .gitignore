@@ -2,7 +2,9 @@
 *__pycache__/
 *.ipynb_checkpoints/
 
-runs/
-datasets/perceivelab-dataset
-
 .vscode/
+
+runs/
+
+datasets/perceivelab-dataset
+datasets/imagenet-dataset

@@ -93,14 +93,14 @@ parser.add_argument(
 parser.add_argument(
     "--train-data",
     type=str,
-    default="./datasets/perceivelab.pth",
-    help="path for training dataset (default: ./datasets/perceivelab.pth)",
+    default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
+    help="the path for the root directory of the training dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
 )
 parser.add_argument(
     "--test-data",
     type=str,
-    default="./datasets/perceivlab.pth",
-    help="path for test dataset (default: ./datasets/perceivelab.pth)",
+    default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
+    help="the path for the root directory fo the test dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
 )
 
 args = parser.parse_args()
