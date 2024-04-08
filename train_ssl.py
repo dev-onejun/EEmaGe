@@ -91,16 +91,22 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--train-data",
+    "--eeg-train-data",
     type=str,
     default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
     help="the path for the root directory of the training dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
 )
 parser.add_argument(
-    "--test-data",
+    "--eeg-test-data",
     type=str,
     default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
-    help="the path for the root directory fo the test dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
+    help="the path for the root directory of the test dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
+)
+parser.add_argument(
+    "--image-data-path",
+    type=str,
+    default="./datasets/imagenet-dataset/train",
+    help="the path for the root directory of the image dataset (default: ./datasets/imagenet-dataset/train)",
 )
 
 args = parser.parse_args()
@@ -261,8 +267,8 @@ def main():
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
-    train_dataset = Dataset(args.train_data)
-    test_dataset = Dataset(args.test_data)
+    train_dataset = Dataset(args.eeg_train_data, args.image_data_path)
+    test_dataset = Dataset(args.eeg_test_data, args.image_data_path)
 
     train_loader = data.DataLoader(
         train_dataset,
