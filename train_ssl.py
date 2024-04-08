@@ -108,6 +108,12 @@ parser.add_argument(
     default="./datasets/imagenet-dataset/train",
     help="the path for the root directory of the image dataset (default: ./datasets/imagenet-dataset/train)",
 )
+parser.add_argument(
+    "--model-type",
+    type=str,
+    default="base",
+    help="model selection option (base / channelnet are supported so far) (default: base)",
+)
 
 args = parser.parse_args()
 
@@ -267,8 +273,8 @@ def main():
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
-    train_dataset = Dataset(args.eeg_train_data, args.image_data_path)
-    test_dataset = Dataset(args.eeg_test_data, args.image_data_path)
+    train_dataset = Dataset(args.eeg_train_data, args.image_data_path, args.model_type)
+    test_dataset = Dataset(args.eeg_test_data, args.image_data_path, args.model_type)
 
     train_loader = data.DataLoader(
         train_dataset,

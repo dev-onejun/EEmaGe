@@ -51,19 +51,21 @@ transform = transforms.Compose(
 class Dataset(Dataset):
 
     # Constructor
-    def __init__(self, eeg_data_path, image_data_path):
+    def __init__(self, eeg_data_path, image_data_path, model_type):
         # Load EEG signals
         loaded = torch.load(eeg_data_path)
         self.data = loaded["dataset"]
 
         self.images = loaded["images"]
         self.images = [
-            os.path.join("image_data_path", image[:9], image + ".JPEG")
+            os.path.join(image_data_path, image[:9], image + ".JPEG")
             for image in self.images
         ]
 
         # Compute size
         self.size = len(self.data)
+
+        self.model_type = model_type
 
     # Get size
     def __len__(self):
@@ -80,8 +82,9 @@ class Dataset(Dataset):
         image = Image.open(image).convert("RGB")
         image = transform(image)
 
-        eeg = eeg.t()
-        eeg = eeg.view(1, 128, time_high - time_low)
+        if self.model_type == "channelnet":
+            eeg = eeg.t()
+            eeg = eeg.view(1, 128, time_high - time_low)
 
         # Return
         return eeg, image
