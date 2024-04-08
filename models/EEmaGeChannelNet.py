@@ -2,35 +2,23 @@ from torch import nn
 import torchsummary
 
 from .EEGChannelNet import EEGFeaturesExtractor
-from .base import ImageFeatureExtractor, EEGDecoder, ImageDecoder
-
-
-class Encoder(nn.Module):
-    def __init__(self, input_dim, hidden_dim1, hidden_dim2):
-        super(Encoder, self).__init__()
-
-        self.encoder = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim1),
-            nn.ReLU(),
-            nn.Linear(hidden_dim1, hidden_dim2),
-            nn.ReLU(),
-        )
-
-    def forward(self, x):
-        out = self.encoder(x)
-        return out
+from .base import ImageFeatureExtractor, Encoder, EEGDecoder, ImageDecoder
 
 
 class EEmaGeChannelNet(nn.Module):
-    def __init__(self, input_dim=4096, hidden_dim1=2048, hidden_dim2=1024):
+    def __init__(
+        self,
+        input_dim=4096,
+        hidden_dim1=2048,
+        hidden_dim2=1024,
+        eeg_exclusion_channel_num=0,
+    ):
         super(EEmaGeChannelNet, self).__init__()
 
         self.eeg_feature_extractor = nn.Sequential(
             EEGFeaturesExtractor(), nn.Linear(500, input_dim), nn.ReLU(True)
         )
-        self.image_feature_extractor = nn.Sequential(
-            ImageFeatureExtractor(), nn.Linear(2048, input_dim), nn.ReLU(True)
-        )
+        self.image_feature_extractor = ImageFeatureExtractor()
 
         self.encoder = Encoder(
             input_dim,
@@ -38,7 +26,12 @@ class EEmaGeChannelNet(nn.Module):
             hidden_dim2,
         )
 
-        self.eeg_decoder = EEGDecoder(hidden_dim2, 450560)
+        self.eeg_decoder = EEGDecoder(
+            128,
+            eeg_exclusion_channel_num,
+            8,
+            hidden_dim2,
+        )
         self.image_decoder = ImageDecoder()
 
     def forward(self, eeg, image):
@@ -55,4 +48,6 @@ class EEmaGeChannelNet(nn.Module):
 
 
 if __name__ == "__main__":
-    torchsummary.summary(EEmaGeChannelNet(), [(1, 128, 440), (3, 299, 299)])
+    torchsummary.summary(
+        EEmaGeChannelNet(), [(1, 128, 440), (3, 299, 299)], device="cpu"
+    )
