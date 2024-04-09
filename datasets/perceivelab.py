@@ -76,6 +76,7 @@ class Dataset(Dataset):
         # Process EEG
         eeg = self.data[i]["eeg"].float().t()
         eeg = eeg[time_low:time_high, :]
+        eeg = eeg.t()
 
         image_index = int(self.data[i]["image"])
         image = self.images[image_index]
@@ -83,8 +84,7 @@ class Dataset(Dataset):
         image = transform(image)
 
         if self.model_type == "channelnet":
-            eeg = eeg.t()
             eeg = eeg.view(1, 128, time_high - time_low)
 
         # Return
-        return eeg, image
+        return eeg, image, eeg, image

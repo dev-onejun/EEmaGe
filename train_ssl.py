@@ -167,10 +167,10 @@ def _train_loss(model, train_loader, optimizer, criterion):
 
         optimizer.zero_grad()
 
-        out = model(eeg_x, image_x)
+        eeg_out, image_out = model(eeg_x, image_x)
 
-        eeg_loss = criterion(out.eeg, eeg_y)
-        image_loss = criterion(out.image, image_y)
+        eeg_loss = criterion(eeg_out, eeg_y)
+        image_loss = criterion(image_out, image_y)
         loss = eeg_loss + image_loss
 
         loss.backward()
@@ -259,7 +259,8 @@ def train_ssl(train_loader, test_loader, model, n_epochs, lr, resume=False):
 
 
 def main():
-    model = EEmaGeChannelNet()
+    # model = EEmaGeChannelNet()
+    model = Base(128, 17, 8)
 
     if args.resume:
         resume = True
