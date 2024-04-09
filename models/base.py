@@ -45,25 +45,25 @@ class EEGDecoder(nn.Module):
             nn.ConvTranspose1d(
                 target_eeg_channel_num * feature_num * 2 * 2,
                 target_eeg_channel_num * feature_num * 2,
-                3,
+                1,
             ),  # (55, )
             nn.ReLU(),
             nn.Upsample(scale_factor=2),  # (110, )
             nn.ConvTranspose1d(
                 target_eeg_channel_num * feature_num * 2,
                 target_eeg_channel_num * feature_num,
-                3,
+                1,
             ),  # (110, )
             nn.ReLU(),
             nn.Upsample(scale_factor=2),  # (220, )
             nn.ConvTranspose1d(
                 target_eeg_channel_num * feature_num,
                 target_eeg_channel_num,
-                3,
+                1,
             ),  # (220, 128)
             nn.ReLU(),
             nn.Upsample(scale_factor=2),  # 440, 128
-            nn.ConvTranspose1d(target_eeg_channel_num, eeg_channel_num, 3),  # 440, 128
+            nn.ConvTranspose1d(target_eeg_channel_num, eeg_channel_num, 1),  # 440, 128
             nn.Sigmoid(),
         )
 
@@ -164,7 +164,10 @@ class ImageFeatureExtractor(nn.Module):
 
     def forward(self, image):
         image_features = self.image_feature_extractor(image)  # 1, 1, 2048
-        image_features = image_features.view(image_features.size(0), -1)  # 2048
+        image_features = image_features.logits.view(
+            image_features.logits.size(0), -1
+        )  # 2048
+        # image_features = image_features.view(image_features.size(0), -1)
         image_features = self.linear(image_features)
         # image_features = image_features.view(-1, 2048)
         return image_features
