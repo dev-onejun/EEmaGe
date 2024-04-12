@@ -49,5 +49,7 @@ class EEmaGeChannelNet(nn.Module):
 
 if __name__ == "__main__":
     torchsummary.summary(
-        EEmaGeChannelNet(), [(1, 128, 440), (3, 299, 299)], device="cpu"
+        EEmaGeChannelNet(eeg_exclusion_channel_num=17),
+        [(1, 128, 440), (3, 299, 299)],
+        device="cpu",
     )

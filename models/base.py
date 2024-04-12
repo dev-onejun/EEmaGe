@@ -7,7 +7,7 @@ EEmaGe Base Model
 [2] https://github.com/bruAristimunha/Re-Deep-Convolution-Neural-Network-and-Autoencoders-Based-Unsupervised-Feature-Learning-of-EEG/tree/master, accessed in Mar. 28 2024.
 """
 
-from torch import nn
+from torch import nn, Tensor
 from torchsummary import summary
 from torchvision import models
 
@@ -164,12 +164,13 @@ class ImageFeatureExtractor(nn.Module):
 
     def forward(self, image):
         image_features = self.image_feature_extractor(image)  # 1, 1, 2048
-        image_features = image_features.logits.view(
-            image_features.logits.size(0), -1
-        )  # 2048
-        # image_features = image_features.view(image_features.size(0), -1)
+        if type(image_features) == Tensor:
+            image_features = image_features.view(image_features.size(0), -1)
+        else:
+            image_features = image_features.logits.view(
+                image_features.logits.size(0), -1
+            )  # 2048
         image_features = self.linear(image_features)
-        # image_features = image_features.view(-1, 2048)
         return image_features
 
 

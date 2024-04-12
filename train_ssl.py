@@ -84,13 +84,6 @@ parser.add_argument(
     help="path to save new checkpoint losses (default: None)",
 )
 parser.add_argument(
-    "--save-name",
-    type=str,
-    default="checkpoint",
-    help="path to save the final mode",
-)
-
-parser.add_argument(
     "--eeg-train-data",
     type=str,
     default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
@@ -137,10 +130,12 @@ def _eval_loss(model, test_loader, criterion):
                 image_y.to(device, dtype=torch.float),
             )
 
-            out = model(eeg_x, image_x)
+            eeg_out, image_out = model(eeg_x, image_x)
+            if args.model_type == "channelnet":
+                eeg_out = eeg_out.view(-1, 1, eeg_out.size(1), eeg_out.size(2))
 
-            eeg_loss = criterion(out.eeg, eeg_y)
-            image_loss = criterion(out.image, image_y)
+            eeg_loss = criterion(eeg_out, eeg_y)
+            image_loss = criterion(image_out, image_y)
             loss = eeg_loss + image_loss
 
             running_loss += loss.item()
@@ -168,6 +163,8 @@ def _train_loss(model, train_loader, optimizer, criterion):
         optimizer.zero_grad()
 
         eeg_out, image_out = model(eeg_x, image_x)
+        if args.model_type == "channelnet":
+            eeg_out = eeg_out.view(-1, 1, eeg_out.size(1), eeg_out.size(2))
 
         eeg_loss = criterion(eeg_out, eeg_y)
         image_loss = criterion(image_out, image_y)
@@ -178,18 +175,7 @@ def _train_loss(model, train_loader, optimizer, criterion):
 
         total_loss += loss.item()
 
-        """ What metrics will use?
-        * https://wikidocs.net/149481
-            - https://pytorch.org/ignite/generated/ignite.metrics.FID.html ???
-
-        y_pred = torch.round(torch.sigmoid(out))
-        acc = (y_pred == y).sum().float() / y.shape[0]
-        acc = torch.round(acc * 100)
-        epoch_train_acc += acc
-        """
-
     epoch_train_loss = total_loss / len(train_loader)
-    # epoch_train_acc = epoch_train_acc / len(train_loader)
 
     return epoch_train_loss
 
@@ -199,10 +185,6 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
     criterion = nn.MSELoss()
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.95)
 
-    """
-    train_losses, train_accs = [], []
-    test_losses, test_accs = [], []
-    """
     train_losses, test_losses = [], []
 
     for epoch in range(1, epochs + 1):
@@ -215,7 +197,7 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
         test_losses.append(test_loss)
 
         print(
-            f"Epoch {epoch}, Train loss {train_loss: .4f}, Test loss {test_loss: .4f}"
+            f"Epoch {epoch}, \t Train loss {train_loss: .4f}, \t Test loss {test_loss: .4f}"
         )
 
         scheduler.step()
@@ -224,7 +206,7 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
             torch.save(
                 model.state_dict(),
                 os.path.join(
-                    root, "saved_models", args.save_name + "_epoch{}.pt".format(epoch)
+                    root, "saved_models", args.model_type + "_epoch{}.pt".format(epoch)
                 ),
             )
 
@@ -234,7 +216,7 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
         writer.flush()
 
     torch.save(
-        model.state_dict(), os.path.join(root, "saved_models", args.save_name + ".pt")
+        model.state_dict(), os.path.join(root, "saved_models", args.model_type + ".pt")
     )
 
     return train_losses, test_losses
@@ -259,8 +241,10 @@ def train_ssl(train_loader, test_loader, model, n_epochs, lr, resume=False):
 
 
 def main():
-    # model = EEmaGeChannelNet()
-    model = Base(128, 17, 8)
+    if args.model_type == "base":
+        model = Base(128, 17, 8)
+    elif args.model_type == "channelnet":
+        model = EEmaGeChannelNet(eeg_exclusion_channel_num=17)
 
     if args.resume:
         resume = True
@@ -299,7 +283,7 @@ def main():
         resume=resume,
     )
 
-    print(f"Best Test Losses {max(test_losses):.4f}")
+    print(f"Best Test Losses {min(test_losses):.4f}")
 
     writer.close()
 
