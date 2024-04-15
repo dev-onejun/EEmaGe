@@ -116,7 +116,7 @@ device = torch.device("cuda" if args.cuda else "cpu")
 torch.manual_seed(args.seed)
 
 
-def _eval_loss(model, test_loader, criterion):
+def _eval_loss(model, test_loader, eeg_criterion, image_criterion):
     model.eval()
     running_loss = 0.0
 
@@ -134,8 +134,8 @@ def _eval_loss(model, test_loader, criterion):
             if args.model_type == "channelnet":
                 eeg_out = eeg_out.view(-1, 1, eeg_out.size(1), eeg_out.size(2))
 
-            eeg_loss = criterion(eeg_out, eeg_y)
-            image_loss = criterion(image_out, image_y)
+            eeg_loss = eeg_criterion(eeg_out, eeg_y)
+            image_loss = image_criterion(image_out, image_y)
             loss = eeg_loss + image_loss
 
             running_loss += loss.item()
@@ -145,7 +145,7 @@ def _eval_loss(model, test_loader, criterion):
     return epoch_test_loss
 
 
-def _train_loss(model, train_loader, optimizer, criterion):
+def _train_loss(model, train_loader, optimizer, eeg_criterion, image_criterion):
     model.train()
 
     total_loss = 0.0
@@ -166,8 +166,9 @@ def _train_loss(model, train_loader, optimizer, criterion):
         if args.model_type == "channelnet":
             eeg_out = eeg_out.view(-1, 1, eeg_out.size(1), eeg_out.size(2))
 
-        eeg_loss = criterion(eeg_out, eeg_y)
-        image_loss = criterion(image_out, image_y)
+        eeg_loss = eeg_criterion(eeg_out, eeg_y)
+        image_loss = image_criterion(image_out, image_y)
+        print(f"TRAIN eeg_loss : %.4f \t image_loss : %.4f" % (eeg_loss, image_loss))
         loss = eeg_loss + image_loss
 
         loss.backward()
@@ -180,19 +181,32 @@ def _train_loss(model, train_loader, optimizer, criterion):
     return epoch_train_loss
 
 
+def mean_absolute_average_error(y_true, y_pred):
+    loss = torch.abs(
+        (y_true - y_pred) / torch.maximum(torch.mean(y_true), torch.tensor(1e-7))
+    )
+    loss = 100.0 * torch.mean(loss)
+    loss_tensor = torch.tensor(loss, requires_grad=True).to(device, dtype=torch.float)
+
+    return loss_tensor
+
+
 def _train_test_loop(model, train_loader, test_loader, epochs, lr):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    criterion = nn.MSELoss()
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.95)
+    eeg_criterion = mean_absolute_average_error
+    image_criterion = nn.MSELoss()
+    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.95)
 
     train_losses, test_losses = [], []
 
     for epoch in range(1, epochs + 1):
-        train_loss = _train_loss(model, train_loader, optimizer, criterion)
+        train_loss = _train_loss(
+            model, train_loader, optimizer, eeg_criterion, image_criterion
+        )
 
         train_losses.append(train_loss)
 
-        test_loss = _eval_loss(model, test_loader, criterion)
+        test_loss = _eval_loss(model, test_loader, eeg_criterion, image_criterion)
 
         test_losses.append(test_loss)
 
@@ -200,7 +214,7 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
             f"Epoch {epoch}, \t Train loss {train_loss: .4f}, \t Test loss {test_loss: .4f}"
         )
 
-        scheduler.step()
+        # scheduler.step()
 
         if epoch % 25 == 0:
             torch.save(
