@@ -1,3 +1,4 @@
-from .base import *
-from .EEGChannelNet import *
-from .EEmaGeChannelNet import *
+import models.base
+import models.EEGChannelNet
+import models.EEmaGeChannelNet
+

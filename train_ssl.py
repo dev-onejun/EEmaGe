@@ -62,14 +62,14 @@ parser.add_argument(
     type=int,
     default=10,
     metavar="N",
-    help="number of epochs to train (default: 10",
+    help="number of epochs to train (default: 10)",
 )
 parser.add_argument(
     "--learning-rate",
     type=float,
-    default=1e-3,
+    default=3e-4,
     metavar="L",
-    help="initial learning rate (default: 1e-3",
+    help="initial learning rate (default: 3e-4)",
 )
 parser.add_argument(
     "--load-losses",
@@ -106,6 +106,12 @@ parser.add_argument(
     type=str,
     default="base",
     help="model selection option (base / channelnet are supported so far) (default: base)",
+)
+parser.add_argument(
+    "--eeg-exclusion-channel-num",
+    type=int,
+    default=0,
+    help="The number of unrelated EEG Channels (default: 0) (recommend: 0|17)",
 )
 
 args = parser.parse_args()
@@ -168,7 +174,6 @@ def _train_loss(model, train_loader, optimizer, eeg_criterion, image_criterion):
 
         eeg_loss = eeg_criterion(eeg_out, eeg_y)
         image_loss = image_criterion(image_out, image_y)
-        print(f"TRAIN eeg_loss : %.4f \t image_loss : %.4f" % (eeg_loss, image_loss))
         loss = eeg_loss + image_loss
 
         loss.backward()
@@ -186,16 +191,16 @@ def mean_absolute_average_error(y_true, y_pred):
         (y_true - y_pred) / torch.maximum(torch.mean(y_true), torch.tensor(1e-7))
     )
     loss = 100.0 * torch.mean(loss)
-    loss_tensor = torch.tensor(loss, requires_grad=True).to(device, dtype=torch.float)
+    loss = loss.to(device, dtype=torch.float)
 
-    return loss_tensor
+    return loss
 
 
 def _train_test_loop(model, train_loader, test_loader, epochs, lr):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     eeg_criterion = mean_absolute_average_error
     image_criterion = nn.MSELoss()
-    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.95)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.9)
 
     train_losses, test_losses = [], []
 
@@ -214,7 +219,7 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
             f"Epoch {epoch}, \t Train loss {train_loss: .4f}, \t Test loss {test_loss: .4f}"
         )
 
-        # scheduler.step()
+        scheduler.step()
 
         if epoch % 25 == 0:
             torch.save(
@@ -256,9 +261,9 @@ def train_ssl(train_loader, test_loader, model, n_epochs, lr, resume=False):
 
 def main():
     if args.model_type == "base":
-        model = Base(128, 17, 8)
+        model = Base(128, args.eeg_exclusion_channel_num, 8)
     elif args.model_type == "channelnet":
-        model = EEmaGeChannelNet(eeg_exclusion_channel_num=17)
+        model = EEmaGeChannelNet(eeg_exclusion_channel_num=args.eeg_exclusion_channel_num)
 
     if args.resume:
         resume = True

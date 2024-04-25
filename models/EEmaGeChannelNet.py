@@ -1,8 +1,8 @@
 from torch import nn
 import torchsummary
 
-from .EEGChannelNet import EEGFeaturesExtractor
-from .base import ImageFeatureExtractor, Encoder, EEGDecoder, ImageDecoder
+from models.EEGChannelNet import EEGFeaturesExtractor
+from models.base import ImageFeatureExtractor, Encoder, EEGDecoder, ImageDecoder
 
 
 class EEmaGeChannelNet(nn.Module):
@@ -48,8 +48,4 @@ class EEmaGeChannelNet(nn.Module):
 
 
 if __name__ == "__main__":
-    torchsummary.summary(
-        EEmaGeChannelNet(eeg_exclusion_channel_num=17),
-        [(1, 128, 440), (3, 299, 299)],
-        device="cpu",
-    )
+    """EEmaGeChannelNet Model"""

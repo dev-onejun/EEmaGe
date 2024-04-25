@@ -8,7 +8,6 @@ EEmaGe Base Model
 """
 
 from torch import nn, Tensor
-from torchsummary import summary
 from torchvision import models
 
 
@@ -20,7 +19,6 @@ class Encoder(nn.Module):
             nn.Linear(input_dim, hidden_dim1),  # 4096 -> 2048
             nn.ReLU(),
             nn.Linear(hidden_dim1, hidden_dim2),  # 2048 -> 1024
-            nn.ReLU(),
         )
 
     def forward(self, x):
@@ -37,8 +35,9 @@ class EEGDecoder(nn.Module):
         target_eeg_channel_num = eeg_channel_num - eeg_exclusion_channel_num
 
         self.linear = nn.Sequential(
-            nn.Linear(input_dim, target_eeg_channel_num * feature_num * 2 * 2 * 55),
-            nn.ReLU(),
+            nn.Linear(
+                input_dim, target_eeg_channel_num * feature_num * 2 * 2 * 55, bias=False
+            ),
         )
 
         self.decoder = nn.Sequential(
@@ -64,7 +63,7 @@ class EEGDecoder(nn.Module):
             nn.ReLU(),
             nn.Upsample(scale_factor=2),  # 440, 128
             nn.ConvTranspose1d(target_eeg_channel_num, eeg_channel_num, 1),  # 440, 128
-            nn.Sigmoid(),
+            nn.Linear(440, 440),
         )
 
         self.eeg_channel_num = target_eeg_channel_num
@@ -82,17 +81,23 @@ class ImageDecoder(nn.Module):
         super(ImageDecoder, self).__init__()
 
         self.linear = nn.Sequential(
-            nn.Linear(1024, 8 * 8 * 2048),
-            nn.ReLU(),
+            nn.Linear(1024, 8 * 8 * 2048, bias=False),
         )
         self.image_decoder = nn.Sequential(
             nn.ConvTranspose2d(2048, 1024, 1),  # 8, 8, 1024
+            nn.ReLU(),
             nn.ConvTranspose2d(1024, 512, 9),  # 16, 16, 512
+            nn.ReLU(),
             nn.ConvTranspose2d(512, 256, 17),  # 32, 32, 256
+            nn.ReLU(),
             nn.ConvTranspose2d(256, 128, 33),  # 64, 64, 128
+            nn.ReLU(),
             nn.ConvTranspose2d(128, 64, 65),  # 128, 128, 64
+            nn.ReLU(),
             nn.ConvTranspose2d(64, 32, 129),  # 256, 256, 32
+            nn.ReLU(),
             nn.ConvTranspose2d(32, 3, 44),  # 299, 299, 3
+            nn.Linear(299, 299),
         )
 
     def forward(self, image_x):
@@ -137,8 +142,7 @@ class EEGFeatureExtractor(nn.Module):
         )
 
         self.linear = nn.Sequential(
-            nn.Linear(self.embedding_dim, encoder_input_dim),
-            nn.ReLU(),
+            nn.Linear(self.embedding_dim, encoder_input_dim, bias=False),
         )
 
     def forward(self, eeg):
@@ -155,8 +159,7 @@ class ImageFeatureExtractor(nn.Module):
         self.image_feature_extractor = models.inception_v3(weights="IMAGENET1K_V1")
         self.image_feature_extractor.fc = nn.Identity()
         self.linear = nn.Sequential(
-            nn.Linear(2048, 4096),
-            nn.ReLU(),
+            nn.Linear(2048, 4096, bias=False),
         )
 
         for parameters in self.image_feature_extractor.parameters():
@@ -258,6 +261,3 @@ if __name__ == "__main__":
             ->[Deconv] (256, 256, 32)
             ->[Deconv] (299, 299, 3)
     """
-
-    model = Base(128, 17, 8)
-    summary(model, [(128, 440), (3, 299, 299)], device="cpu")
