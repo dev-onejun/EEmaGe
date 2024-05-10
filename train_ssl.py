@@ -119,6 +119,18 @@ parser.add_argument(
     default="./datasets/perceivelab-dataset/data/block_splits_by_image_all.pth",
     help="the path for the block splits (default: ./datasets/perceivelab-dataset/data/block_splits_by_image_all.pth)",
 )
+parser.add_argument(
+    "--should-shuffle",
+    type=bool,
+    default=False,
+    help="should shuffle the images of dataset (default: False)",
+)
+parser.add_argument(
+    "--downstream-task",
+    type=bool,
+    default=False,
+    help="Execute for downstream task (default: False)",
+)
 
 args = parser.parse_args()
 
@@ -284,7 +296,7 @@ def main():
         model = nn.DataParallel(model)
 
     dataset = Dataset(args.eeg_train_data, args.image_data_path, args.model_type)
-    loaders = {split: data.DataLoader(Splitter(dataset, split_name=split, split_path=args.block_splits_path), batch_size=args.batch_size, shuffle=True, num_workers=args.number_workers) for split in ["train", "val", "test"]}
+    loaders = {split: data.DataLoader(Splitter(dataset, split_name=split, split_path=args.block_splits_path, shuffle=args.should_shuffle, downstream_task=args.downstream_task, seed=args.seed), batch_size=args.batch_size, shuffle=True, num_workers=args.number_workers) for split in ["train", "val", "test"]}
 
     train_loader = loaders["train"]
     test_loader = loaders["test"]

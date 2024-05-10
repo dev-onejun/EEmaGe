@@ -32,9 +32,9 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from PIL import Image
+import random
 
 import os
-
 
 time_low = 20
 time_high = 460
@@ -91,15 +91,26 @@ class Dataset(Dataset):
         # Return
         return eeg, image, eeg, image
 
+
 class Splitter:
-    def __init__(self, dataset, split_path, split_name="train"):
+    def __init__(self, dataset, split_path, split_name="train", shuffle=False, downstream_task=False, seed=42):
         # Set EEG dataset
         self.dataset = dataset
         # Load split
         loaded = torch.load(split_path)
         split = loaded["splits"][0]
-        # print(split)
-        self.split_idx = split[split_name]
+        random.seed(seed)
+        if downstream_task:
+            self.split_idx = split[split_name]
+        else:
+            if split_name == "train":
+                self.split_idx = split["train"] + split["val"]
+            else:
+                self.split_idx = split[split_name]
+
+        if shuffle and split_name == "train":
+            random.shuffle(self.dataset.images)
+
         # Compute size
         self.size = len(self.split_idx)
 
