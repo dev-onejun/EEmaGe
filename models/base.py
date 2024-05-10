@@ -167,12 +167,14 @@ class ImageFeatureExtractor(nn.Module):
 
     def forward(self, image):
         image_features = self.image_feature_extractor(image)  # 1, 1, 2048
+
         if type(image_features) == Tensor:
             image_features = image_features.view(image_features.size(0), -1)
         else:
             image_features = image_features.logits.view(
                 image_features.logits.size(0), -1
             )  # 2048
+
         image_features = self.linear(image_features)
         return image_features
 
@@ -218,46 +220,3 @@ class Base(nn.Module):
         image_out = self.image_decoder(image_x)  # 299, 299, 3
 
         return eeg_out, image_out
-
-
-if __name__ == "__main__":
-    """
-    (440, 128) ->[conv1d] (440, 2048) ->[maxpooling] (220, 2048)        [ x 16 해놨는데, x 8로? ]
-            ->[conv1d] (220, 4096) ->[maxpooling] (110, 4096)
-            ->[conv1d] (110, 8192) ->[maxpooling] (55, 8192)
-            ->[flatten] (450560) ->[Dense] (4096)
-
-            # Common Encoder
-            ->[Dense] (4096) ->[Dense] (2048) ->[Dense] (1024)
-
-            # EEG Decoder
-            ->[Dense] (450560) ->[reshape] (55, 8192)
-
-            ->[Deconv] (55, 4096) ->[Upsampling] (110, 4096)
-            ->[Deconv] (110, 2048) ->[Upsampling] (220, 2048)
-            ->[Deconv] (220, 128) ->[Upsampling] (440, 128)
-            ->[Deconv] (440, 128)
-    """
-    """
-    (440, 128) ->[] (440, 128*8 = 1024) ->[maxpooling] (220, 1024)
-            ->[conv1d] (220, 128*8*2 = 2048) ->[] (110, 2048)
-            ->[conv1d] (110, 128*8*2*2 = 4096) ->[] (55, 4096)
-            ->[flatten] (225280) ->[Dense] (4096)
-    """
-
-    """
-    (299, 299, 3) ->[InceptionV3 ] (1, 1, 2048)
-
-            # Common Encoder
-            ->[Dense] (4096) ->[Dense] (2048) ->[Dense] (1024)
-
-            # Image Decoder
-            ->[Dense] (8 * 8 * 2048) ->[Reshape] (8, 8, 2048)
-            ->[Deconv] (8, 8, 1024)
-            ->[Deconv] (16, 16, 512)
-            ->[Deconv] (32, 32, 256)
-            ->[Deconv] (64, 64, 128)
-            ->[Deconv] (128, 128, 64)
-            ->[Deconv] (256, 256, 32)
-            ->[Deconv] (299, 299, 3)
-    """

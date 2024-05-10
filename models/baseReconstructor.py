@@ -1,5 +1,5 @@
 from torch import nn
-from models.base import (
+from .base import (
     EEGFeatureExtractor,
     Encoder,
     ImageDecoder,
@@ -9,27 +9,25 @@ from models.base import (
 class BaseReconstructor(nn.Module):
     def __init__(
         self,
-        input_dim=4096,
-        hidden_dim1=2048,
-        hidden_dim2=1024,
         eeg_channel_num=128,
         eeg_exclusion_channel_num=17,
         feature_num=8,
     ):
         super(BaseReconstructor, self).__init__()
 
+        self.ENCODER_INPUT_DIM = 4096
+
         self.eeg_feature_extractor = EEGFeatureExtractor(
             eeg_channel_num,
             eeg_exclusion_channel_num,
             feature_num,
-            input_dim,
+            self.ENCODER_INPUT_DIM,
         )
 
-        # XXX: 이게 맞지 않나 싶어요...
         self.encoder = Encoder(
-            input_dim,
-            hidden_dim1,
-            hidden_dim2,
+            self.ENCODER_INPUT_DIM,
+            self.ENCODER_INPUT_DIM // 2,
+            (self.ENCODER_INPUT_DIM // 2) // 2,
         )
 
         self.image_decoder = ImageDecoder()

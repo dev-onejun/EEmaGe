@@ -4,8 +4,7 @@ from torch.utils import data
 from torch.utils.tensorboard.writer import SummaryWriter
 
 from datasets import Dataset, Splitter
-from models.base import Base
-from models.EEmaGeChannelNet import EEmaGeChannelNet
+from models import Base, EEmaGeChannelNet
 from train_helpers import load_losses, save_losses
 
 import os, argparse, random
@@ -89,10 +88,10 @@ parser.add_argument(
     help="the path for the root directory of the training dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
 )
 parser.add_argument(
-    "--eeg-test-data",
+    "--eeg-val-data",
     type=str,
     default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
-    help="the path for the root directory of the test dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
+    help="the path for the root directory of the val dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
 )
 parser.add_argument(
     "--image-data-path",
@@ -146,12 +145,12 @@ torch.manual_seed(args.seed)
 random.seed(args.seed)
 
 
-def _eval_loss(model, test_loader, eeg_criterion, image_criterion):
+def _eval_loss(model, val_loader, eeg_criterion, image_criterion):
     model.eval()
     running_loss = 0.0
 
     with torch.no_grad():
-        for i, data in enumerate(tqdm(test_loader)):
+        for i, data in enumerate(tqdm(val_loader)):
             eeg_x, image_x, eeg_y, image_y = data
             eeg_x, image_x, eeg_y, image_y = (
                 eeg_x.to(device, dtype=torch.float),
@@ -170,9 +169,9 @@ def _eval_loss(model, test_loader, eeg_criterion, image_criterion):
 
             running_loss += loss.item()
 
-        epoch_test_loss = running_loss / len(test_loader)
+        epoch_val_loss = running_loss / len(val_loader)
 
-    return epoch_test_loss
+    return epoch_val_loss
 
 
 def _train_loss(model, train_loader, optimizer, eeg_criterion, image_criterion):
@@ -220,16 +219,15 @@ def mean_absolute_average_error(y_true, y_pred):
     return loss
 
 
-def _train_test_loop(model, train_loader, test_loader, epochs, lr):
+def _train_val_loop(model, train_loader, val_loader, epochs, lr):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    # eeg_criterion = mean_absolute_average_error
     eeg_criterion = nn.MSELoss()
     image_criterion = nn.MSELoss()
     scheduler = torch.optim.lr_scheduler.StepLR(
         optimizer, step_size=args.step_size, gamma=0.9
     )
 
-    train_losses, test_losses = [], []
+    train_losses, val_losses = [], []
 
     for epoch in range(1, epochs + 1):
         train_loss = _train_loss(
@@ -238,12 +236,11 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
 
         train_losses.append(train_loss)
 
-        test_loss = _eval_loss(model, test_loader, eeg_criterion, image_criterion)
-
-        test_losses.append(test_loss)
+        val_loss = _eval_loss(model, val_loader, eeg_criterion, image_criterion)
+        val_losses.append(val_loss)
 
         print(
-            f"Epoch {epoch}, \t Train loss {train_loss: .4f}, \t Test loss {test_loss: .4f}"
+            f"Epoch {epoch}, \t Train loss {train_loss: .4f}, \t Val loss {val_loss: .4f}"
         )
 
         scheduler.step()
@@ -257,13 +254,13 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
             )
             save_losses(
                 train_losses,
-                test_losses,
+                val_losses,
                 saved_models_dir,
                 args.save_losses + "_epoch{}".format(epoch),
             )
 
         writer.add_scalar("Loss/train", train_loss, epoch)
-        writer.add_scalar("Loss/test", test_loss, epoch)
+        writer.add_scalar("Loss/val", val_loss, epoch)
 
         writer.flush()
 
@@ -271,25 +268,25 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
         model.state_dict(), os.path.join(root, "saved_models", args.model_type + ".pt")
     )
 
-    return train_losses, test_losses
+    return train_losses, val_losses
 
 
-def train_ssl(train_loader, test_loader, model, n_epochs, lr, resume=False):
-    new_train_losses, new_test_losses = _train_test_loop(
-        model, train_loader, test_loader, epochs=n_epochs, lr=lr
+def train_ssl(train_loader, val_loader, model, n_epochs, lr, resume=False):
+    new_train_losses, new_val_losses = _train_val_loop(
+        model, train_loader, val_loader, epochs=n_epochs, lr=lr
     )
 
     if resume:
-        train_losses, test_losses = load_losses(saved_models_dir, args.load_losses)
+        train_losses, val_losses = load_losses(saved_models_dir, args.load_losses)
     else:
-        train_losses, test_losses = [], []
+        train_losses, val_losses = [], []
 
     train_losses.extend(new_train_losses)
-    test_losses.extend(new_test_losses)
+    val_losses.extend(new_val_losses)
 
-    save_losses(train_losses, test_losses, saved_models_dir, args.save_losses)
+    save_losses(train_losses, val_losses, saved_models_dir, args.save_losses)
 
-    return train_losses, test_losses, model
+    return train_losses, val_losses, model
 
 
 def main():
@@ -313,22 +310,35 @@ def main():
         model = nn.DataParallel(model)
 
     dataset = Dataset(args.eeg_train_data, args.image_data_path, args.model_type)
-    loaders = {split: data.DataLoader(Splitter(dataset, split_name=split, split_path=args.block_splits_path, shuffle=args.should_shuffle, downstream_task=args.downstream_task), batch_size=args.batch_size, shuffle=True, num_workers=args.number_workers) for split in ["train", "val", "test"]}
+    loaders = {
+        split: data.DataLoader(
+            Splitter(
+                dataset,
+                split_name=split,
+                split_path=args.block_splits_path,
+                shuffle=args.should_shuffle,
+                downstream_task=args.downstream_task,
+            ),
+            batch_size=args.batch_size,
+            shuffle=True,
+            num_workers=args.number_workers,
+        )
+        for split in ["train", "val", "test"]
+    }
 
     train_loader = loaders["train"]
-    test_loader = loaders["test"]
-    # val_loader = loaders["val"]
+    val_loader = loaders["test"]
 
-    train_losses, test_losses, model = train_ssl(
+    train_losses, val_losses, model = train_ssl(
         train_loader,
-        test_loader,
+        val_loader,
         model,
         n_epochs=args.epochs,
         lr=args.learning_rate,
         resume=resume,
     )
 
-    print(f"Best Test Losses {min(test_losses):.4f}")
+    print(f"Best Val Losses {min(val_losses):.4f}")
 
     writer.close()
 

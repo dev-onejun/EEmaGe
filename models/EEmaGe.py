@@ -1,17 +1,16 @@
 import torch
 from torch import nn
 
-from models.base import Base
-from models.EEmaGeChannelNet import EEmaGeChannelNet
+from models import Base, EEmaGeChannelNet
 
 
 class EEmaGeClassifier(nn.Module):
-    def __init__(self, **kwag):
+    def __init__(self, **kwargs):
         super(EEmaGeClassifier, self).__init__()
         model_type, eeg_exclusion_channel_num, pretrained_model_path = (
-            kwag["model_type"],
-            kwag["eeg_exclusion_channel_num"],
-            kwag["pretrained_model_path"],
+            kwargs["model_type"],
+            kwargs["eeg_exclusion_channel_num"],
+            kwargs["pretrained_model_path"],
         )
 
         assert model_type in (

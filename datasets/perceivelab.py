@@ -29,10 +29,9 @@ Citations
 
 import torch
 from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
 from torchvision import transforms
+
 from PIL import Image
-import random
 
 import os, random
 
@@ -58,7 +57,6 @@ class Dataset(Dataset):
         self.data = loaded["dataset"]
 
         self.images = loaded["images"]
-        self.data_label = [x["image"] for x in self.data]
         self.images = [
             os.path.join(image_data_path, image[:9], image + ".JPEG")
             for image in self.images
@@ -103,12 +101,15 @@ class Splitter:
     ):
         # Set EEG dataset
         self.dataset = dataset
+
         # Load split
         loaded = torch.load(split_path)
         split = loaded["splits"][0]
+
         if downstream_task:
             self.split_idx = split[split_name]
         else:
+            # 학습에는 train set과 validation set을 사용하고, 테스트에는 test set을 사용
             if split_name == "train":
                 self.split_idx = split["train"] + split["val"]
             else:
@@ -176,9 +177,12 @@ class ClassificationSplitter:
     ):
         # Set EEG dataset
         self.dataset = dataset
+
         # Load split
         loaded = torch.load(split_path)
         split = loaded["splits"][0]
+
+        # 학습에는 train set과 validation set을 사용하고, 테스트에는 test set을 사용
         if downstream_task:
             self.split_idx = split[split_name]
         else:
@@ -201,5 +205,6 @@ class ClassificationSplitter:
     def __getitem__(self, i):
         # Get sample from dataset
         eeg, label = self.dataset[self.split_idx[i]]
+
         # Return
         return eeg, label

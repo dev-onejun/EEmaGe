@@ -1,15 +1,13 @@
-import random
-
-from train_helpers import get_downstream_classification_arguments, process_large_dataset
-
 import torch
 from torch import nn
 from torch.utils import data
+from torch.utils.tensorboard.writer import SummaryWriter
 
-from models.EEmaGe import EEmaGeClassifier
+from train_helpers import get_downstream_classification_arguments, process_large_dataset
+from models import EEmaGeClassifier
 from datasets.perceivelab import PerceivelabClassification, ClassificationSplitter
 
-from torch.utils.tensorboard.writer import SummaryWriter
+import random
 
 
 def train(model, train_dataloader, validate_dataloader):
@@ -102,7 +100,6 @@ def main():
     }
     train_dataloader = loaders["train"]
     validate_dataloader = loaders["val"]
-    test_dataloader = loaders["test"]
 
     train(model, train_dataloader, validate_dataloader)
 

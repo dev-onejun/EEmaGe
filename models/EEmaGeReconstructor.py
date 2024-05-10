@@ -1,7 +1,6 @@
 from torch import nn
 
-from models.EEGChannelNet import EEGFeaturesExtractor
-from models.base import Encoder, ImageDecoder
+from models import EEGFeaturesExtractor, Encoder, ImageDecoder
 
 
 class EEmaGeReconstructor(nn.Module):
@@ -31,7 +30,3 @@ class EEmaGeReconstructor(nn.Module):
         image_out = self.image_decoder(latent_vector)
 
         return image_out
-
-
-if __name__ == "__main__":
-    """EEmaGeReconstructor Model"""

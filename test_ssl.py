@@ -4,10 +4,7 @@ from torch.utils import data
 from ignite.metrics import FID, InceptionScore
 
 from datasets import Dataset, Splitter
-from models.base import Base
-from models.EEmaGeChannelNet import EEmaGeChannelNet
-from models.baseReconstructor import BaseReconstructor
-from models.EEmaGeReconstructor import EEmaGeReconstructor
+from models import Base, EEmaGeChannelNet, BaseReconstructor, EEmaGeReconstructor
 
 import sys
 import os
@@ -128,9 +125,6 @@ def main():
     )
 
     if args.model_type == "base":
-        # XXX: tran_ssl에서도 이게 맞을 듯
-        # 그리고 전반적으로 train_test를 train_val로 바꾸는게 맞을 듯
-        # dataset을 비롯한 대부분의 test라고 적힌것들이 사실 val이라는...
         pretrained = Base(eeg_exclusion_channel_num=args.eeg_exclusion_channel_num)
         pretrained.load_state_dict(
             torch.load(os.path.join(saved_models_dir, args.model_type + ".pt"))
