@@ -5,6 +5,7 @@
 .vscode/
 
 runs/
+saved_models/
 
 datasets/perceivelab-dataset
 datasets/imagenet-dataset
