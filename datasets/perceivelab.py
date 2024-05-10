@@ -29,7 +29,6 @@ Citations
 
 import torch
 from torch.utils.data import Dataset
-from torchvision import transforms
 
 from PIL import Image
 
@@ -38,20 +37,12 @@ import os, random
 time_low = 20
 time_high = 460
 
-# Image Trasnform
-transform = transforms.Compose(
-    [
-        transforms.Resize((299, 299)),  # 이미지 크기를 299x299로 변경
-        transforms.ToTensor(),  # 이미지를 PyTorch 텐서로 변환
-    ]
-)
-
 
 # Dataset class
 class Dataset(Dataset):
 
     # Constructor
-    def __init__(self, eeg_data_path, image_data_path, model_type):
+    def __init__(self, eeg_data_path, image_data_path, model_type, transform):
         # Load EEG signals
         loaded = torch.load(eeg_data_path)
         self.data = loaded["dataset"]
@@ -66,6 +57,7 @@ class Dataset(Dataset):
         self.size = len(self.data)
 
         self.model_type = model_type
+        self.transform = transform
 
     # Get size
     def __len__(self):
@@ -81,7 +73,7 @@ class Dataset(Dataset):
         image_index = int(self.data[i]["image"])
         image = self.images[image_index]
         image = Image.open(image).convert("RGB")
-        image = transform(image)
+        image = self.transform(image)
 
         if self.model_type == "channelnet":
             eeg = eeg.view(1, 128, time_high - time_low)

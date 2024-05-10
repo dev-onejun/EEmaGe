@@ -5,144 +5,15 @@ from torch.utils.tensorboard.writer import SummaryWriter
 
 from datasets import Dataset, Splitter
 from models import Base, EEmaGeChannelNet
-from train_helpers import load_losses, save_losses
+from utils.train_helpers import (
+    load_losses,
+    save_losses,
+    transform,
+    process_large_dataset,
+)
+from utils.args import get_train_ssl_arguments
 
-import os, argparse, random
-from tqdm import tqdm
-
-root = os.path.dirname(__file__)
-saved_models_dir = os.path.join(root, "saved_models")
-if not os.path.exists(saved_models_dir):
-    os.makedirs(saved_models_dir)
-
-# Tensorboard
-writer = SummaryWriter()
-
-parser = argparse.ArgumentParser(description="Self-supervised EEG model training.")
-parser.add_argument(
-    "--no-cuda",
-    action="store_true",
-    default=False,
-    help="disable CUDA training",
-)
-parser.add_argument(
-    "--seed",
-    type=int,
-    default=42,
-    metavar="S",
-    help="random seed (default: 42)",
-)
-parser.add_argument(
-    "--resume",
-    type=str,
-    default="",
-    help="path to latest checkpoint (default: None)",
-)
-parser.add_argument(
-    "--batch-size",
-    "-b",
-    type=int,
-    default=32,
-    metavar="N",
-    help="input batch size for training (default: 32)",
-)
-parser.add_argument(
-    "--number-workers",
-    "-n",
-    type=int,
-    default=16,
-    metavar="N",
-    help="number of works to load dataset (default: 16)",
-)
-parser.add_argument(
-    "--epochs",
-    "-e",
-    type=int,
-    default=10,
-    metavar="N",
-    help="number of epochs to train (default: 10)",
-)
-parser.add_argument(
-    "--learning-rate",
-    type=float,
-    default=3e-4,
-    metavar="L",
-    help="initial learning rate (default: 3e-4)",
-)
-parser.add_argument(
-    "--load-losses",
-    type=str,
-    default="",
-    help="path to load the checkpoint losses (default: None)",
-)
-parser.add_argument(
-    "--save-losses",
-    type=str,
-    default="",
-    help="path to save a checkpoint losses (default: None)",
-)
-parser.add_argument(
-    "--eeg-train-data",
-    type=str,
-    default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
-    help="the path for the root directory of the training dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
-)
-parser.add_argument(
-    "--eeg-val-data",
-    type=str,
-    default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
-    help="the path for the root directory of the val dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
-)
-parser.add_argument(
-    "--image-data-path",
-    type=str,
-    default="./datasets/imagenet-dataset/train",
-    help="the path for the root directory of the image dataset (default: ./datasets/imagenet-dataset/train)",
-)
-parser.add_argument(
-    "--model-type",
-    type=str,
-    default="base",
-    help="model selection option (base / channelnet are supported so far) (default: base)",
-)
-parser.add_argument(
-    "--eeg-exclusion-channel-num",
-    type=int,
-    default=0,
-    help="The number of unrelated EEG Channels (default: 0) (recommend: 0|17)",
-)
-parser.add_argument(
-    "--step-size",
-    type=int,
-    default=10,
-    help="A step size in the StepLR scheduler",
-)
-parser.add_argument(
-    "--block-splits-path",
-    type=str,
-    default="./datasets/perceivelab-dataset/data/block_splits_by_image_all.pth",
-    help="the path for the block splits (default: ./datasets/perceivelab-dataset/data/block_splits_by_image_all.pth)",
-)
-parser.add_argument(
-    "--should-shuffle",
-    type=bool,
-    default=False,
-    help="should shuffle the images of dataset (default: False)",
-)
-parser.add_argument(
-    "--downstream-task",
-    type=bool,
-    default=False,
-    help="Execute for downstream task (default: False)",
-)
-
-args = parser.parse_args()
-
-args.cuda = not args.no_cuda and torch.cuda.is_available()
-device = torch.device("cuda" if args.cuda else "cpu")
-
-torch.manual_seed(args.seed)
-random.seed(args.seed)
+import os, random
 
 
 def _eval_loss(model, val_loader, eeg_criterion, image_criterion):
@@ -150,7 +21,7 @@ def _eval_loss(model, val_loader, eeg_criterion, image_criterion):
     running_loss = 0.0
 
     with torch.no_grad():
-        for i, data in enumerate(tqdm(val_loader)):
+        for data in process_large_dataset(val_loader):
             eeg_x, image_x, eeg_y, image_y = data
             eeg_x, image_x, eeg_y, image_y = (
                 eeg_x.to(device, dtype=torch.float),
@@ -180,7 +51,7 @@ def _train_loss(model, train_loader, optimizer, eeg_criterion, image_criterion):
     total_loss = 0.0
     # epoch_train_acc = 0.0
 
-    for i, data in enumerate(tqdm(train_loader)):
+    for data in process_large_dataset(train_loader):
         eeg_x, image_x, eeg_y, image_y = data
         eeg_x, image_x, eeg_y, image_y = (
             eeg_x.to(device, dtype=torch.float),
@@ -309,7 +180,9 @@ def main():
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
-    dataset = Dataset(args.eeg_train_data, args.image_data_path, args.model_type)
+    dataset = Dataset(
+        args.eeg_train_data, args.image_data_path, args.model_type, transform
+    )
     loaders = {
         split: data.DataLoader(
             Splitter(
@@ -342,6 +215,22 @@ def main():
 
     writer.close()
 
+
+root = os.path.dirname(__file__)
+saved_models_dir = os.path.join(root, "saved_models")
+if not os.path.exists(saved_models_dir):
+    os.makedirs(saved_models_dir)
+
+# Tensorboard
+writer = SummaryWriter()
+
+args = get_train_ssl_arguments()
+
+args.cuda = not args.no_cuda and torch.cuda.is_available()
+device = torch.device("cuda" if args.cuda else "cpu")
+
+torch.manual_seed(args.seed)
+random.seed(args.seed)
 
 if __name__ == "__main__":
     main()

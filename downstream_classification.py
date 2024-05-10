@@ -3,7 +3,8 @@ from torch import nn
 from torch.utils import data
 from torch.utils.tensorboard.writer import SummaryWriter
 
-from train_helpers import get_downstream_classification_arguments, process_large_dataset
+from utils.train_helpers import process_large_dataset
+from utils.args import get_downstream_classification_arguments
 from models import EEmaGeClassifier
 from datasets.perceivelab import PerceivelabClassification, ClassificationSplitter
 
@@ -77,6 +78,8 @@ def main():
         pretrained_model_path=args.pretrained_model_path,
     )
     model.to(device)
+    if torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
 
     dataset = PerceivelabClassification(
         args.eeg_train_data,

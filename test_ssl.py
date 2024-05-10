@@ -5,85 +5,10 @@ from ignite.metrics import FID, InceptionScore
 
 from datasets import Dataset, Splitter
 from models import Base, EEmaGeChannelNet, BaseReconstructor, EEmaGeReconstructor
+from utils.args import get_test_ssl_arguments
+from utils.train_helpers import transform, process_large_dataset
 
-import sys
-import os
-import argparse
-from tqdm import tqdm
-
-root = os.path.dirname(__file__)
-saved_models_dir = os.path.join(root, "saved_models")
-if not os.path.exists(saved_models_dir):
-    sys.exit(f"Directory {saved_models_dir} does not exist.")
-
-
-parser = argparse.ArgumentParser(description="Generate Reconstructed Image Dataset.")
-parser.add_argument(
-    "--no-cuda",
-    action="store_true",
-    default=False,
-    help="disable CUDA training",
-)
-parser.add_argument(
-    "--seed",
-    type=int,
-    default=42,
-    metavar="S",
-    help="random seed (default: 42)",
-)
-parser.add_argument(
-    "--batch-size",
-    "-b",
-    type=int,
-    default=32,
-    metavar="N",
-    help="input batch size for training (default: 32)",
-)
-parser.add_argument(
-    "--number-workers",
-    "-n",
-    type=int,
-    default=16,
-    metavar="N",
-    help="number of works to load dataset (default: 16)",
-)
-parser.add_argument(
-    "--eeg-test-data",
-    type=str,
-    default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
-    help="the path for the root directory of the test dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
-)
-parser.add_argument(
-    "--image-data-path",
-    type=str,
-    default="./datasets/imagenet-dataset/train",
-    help="the path for the root directory of the image dataset (default: ./datasets/imagenet-dataset/train)",
-)
-parser.add_argument(
-    "--model-type",
-    type=str,
-    default="base",
-    help="model selection option (base / channelnet are supported so far) (default: base)",
-)
-parser.add_argument(
-    "--eeg-exclusion-channel-num",
-    type=int,
-    default=0,
-    help="The number of unrelated EEG Channels (default: 0) (recommend: 0|17)",
-)
-parser.add_argument(
-    "--block-splits-path",
-    type=str,
-    default="./datasets/perceivelab-dataset/data/block_splits_by_image_all.pth",
-    help="the path for the block splits (default: ./datasets/perceivelab-dataset/data/block_splits_by_image_all.pth)",
-)
-
-args = parser.parse_args()
-
-args.cuda = not args.no_cuda and torch.cuda.is_available()
-device = torch.device("cuda" if args.cuda else "cpu")
-
-torch.manual_seed(args.seed)
+import sys, os, random
 
 
 # TODO: is 적용을 위한 생성 파라미터 찾아볼 것
@@ -96,7 +21,7 @@ def compute_matrix(model, test_loader):
 
     model.eval()
     with torch.no_grad():
-        for i, data in enumerate(tqdm(test_loader)):
+        for data in process_large_dataset(test_loader):
             eeg_x, image_x, eeg_y, image_y = data
             eeg_x = eeg_x.to(device, dtype=torch.float)
 
@@ -109,21 +34,6 @@ def compute_matrix(model, test_loader):
 
 
 def main():
-    dataset = Dataset(args.eeg_test_data, args.image_data_path, args.model_type)
-    test_splitter = Splitter(
-        dataset,
-        split_name="test",
-        split_path=args.block_splits_path,
-        shuffle=False,
-        downstream_task=True,
-    )
-    test_loader = data.DataLoader(
-        test_splitter,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.number_workers,
-    )
-
     if args.model_type == "base":
         pretrained = Base(eeg_exclusion_channel_num=args.eeg_exclusion_channel_num)
         pretrained.load_state_dict(
@@ -154,11 +64,42 @@ def main():
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
+    dataset = Dataset(
+        args.eeg_test_data, args.image_data_path, args.model_type, transform
+    )
+    test_splitter = Splitter(
+        dataset,
+        split_name="test",
+        split_path=args.block_splits_path,
+        shuffle=False,
+        downstream_task=True,
+    )
+    test_loader = data.DataLoader(
+        test_splitter,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.number_workers,
+    )
+
     # fid_ret, is_ret = compute_matrix(model, test_loader)
     fid_ret = compute_matrix(model, test_loader)
     print(f"FID: {fid_ret}")
     # print(f"IS: {is_ret}")
 
+
+root = os.path.dirname(__file__)
+saved_models_dir = os.path.join(root, "saved_models")
+if not os.path.exists(saved_models_dir):
+    sys.exit(f"Directory {saved_models_dir} does not exist.")
+
+
+args = get_test_ssl_arguments()
+
+args.cuda = not args.no_cuda and torch.cuda.is_available()
+device = torch.device("cuda" if args.cuda else "cpu")
+
+torch.manual_seed(args.seed)
+random.seed(args.seed)
 
 if __name__ == "__main__":
     main()
