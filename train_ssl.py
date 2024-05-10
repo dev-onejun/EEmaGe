@@ -8,8 +8,7 @@ from models.base import Base
 from models.EEmaGeChannelNet import EEmaGeChannelNet
 from train_helpers import load_losses, save_losses
 
-import os
-import argparse
+import os, argparse, random
 from tqdm import tqdm
 
 root = os.path.dirname(__file__)
@@ -138,6 +137,7 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda" if args.cuda else "cpu")
 
 torch.manual_seed(args.seed)
+random.seed(args.seed)
 
 
 def _eval_loss(model, test_loader, eeg_criterion, image_criterion):
@@ -296,7 +296,7 @@ def main():
         model = nn.DataParallel(model)
 
     dataset = Dataset(args.eeg_train_data, args.image_data_path, args.model_type)
-    loaders = {split: data.DataLoader(Splitter(dataset, split_name=split, split_path=args.block_splits_path, shuffle=args.should_shuffle, downstream_task=args.downstream_task, seed=args.seed), batch_size=args.batch_size, shuffle=True, num_workers=args.number_workers) for split in ["train", "val", "test"]}
+    loaders = {split: data.DataLoader(Splitter(dataset, split_name=split, split_path=args.block_splits_path, shuffle=args.should_shuffle, downstream_task=args.downstream_task), batch_size=args.batch_size, shuffle=True, num_workers=args.number_workers) for split in ["train", "val", "test"]}
 
     train_loader = loaders["train"]
     test_loader = loaders["test"]

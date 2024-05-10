@@ -93,13 +93,12 @@ class Dataset(Dataset):
 
 
 class Splitter:
-    def __init__(self, dataset, split_path, split_name="train", shuffle=False, downstream_task=False, seed=42):
+    def __init__(self, dataset, split_path, split_name="train", shuffle=False, downstream_task=False):
         # Set EEG dataset
         self.dataset = dataset
         # Load split
         loaded = torch.load(split_path)
         split = loaded["splits"][0]
-        random.seed(seed)
         if downstream_task:
             self.split_idx = split[split_name]
         else:
