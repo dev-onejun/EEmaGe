@@ -74,13 +74,13 @@ parser.add_argument(
     "--load-losses",
     type=str,
     default="",
-    help="path to load the latest checkpoint losses (default: None)",
+    help="path to load the checkpoint losses (default: None)",
 )
 parser.add_argument(
     "--save-losses",
     type=str,
     default="",
-    help="path to save new checkpoint losses (default: None)",
+    help="path to save a checkpoint losses (default: None)",
 )
 parser.add_argument(
     "--eeg-train-data",
@@ -111,6 +111,12 @@ parser.add_argument(
     type=int,
     default=0,
     help="The number of unrelated EEG Channels (default: 0) (recommend: 0|17)",
+)
+parser.add_argument(
+    "--step-size",
+    type=int,
+    default=10,
+    help="A step size in the StepLR scheduler",
 )
 parser.add_argument(
     "--block-splits-path",
@@ -208,7 +214,7 @@ def mean_absolute_average_error(y_true, y_pred):
     loss = torch.abs(
         (y_true - y_pred) / torch.maximum(torch.mean(y_true), torch.tensor(1e-7))
     )
-    loss = 100.0 * torch.mean(loss)
+    loss = torch.mean(loss)
     loss = loss.to(device, dtype=torch.float)
 
     return loss
@@ -216,9 +222,12 @@ def mean_absolute_average_error(y_true, y_pred):
 
 def _train_test_loop(model, train_loader, test_loader, epochs, lr):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    eeg_criterion = mean_absolute_average_error
+    # eeg_criterion = mean_absolute_average_error
+    eeg_criterion = nn.MSELoss()
     image_criterion = nn.MSELoss()
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.9)
+    scheduler = torch.optim.lr_scheduler.StepLR(
+        optimizer, step_size=args.step_size, gamma=0.9
+    )
 
     train_losses, test_losses = [], []
 
@@ -239,12 +248,18 @@ def _train_test_loop(model, train_loader, test_loader, epochs, lr):
 
         scheduler.step()
 
-        if epoch % 25 == 0:
+        if epoch % args.step_size == 0:
             torch.save(
                 model.state_dict(),
                 os.path.join(
                     root, "saved_models", args.model_type + "_epoch{}.pt".format(epoch)
                 ),
+            )
+            save_losses(
+                train_losses,
+                test_losses,
+                saved_models_dir,
+                args.save_losses + "_epoch{}".format(epoch),
             )
 
         writer.add_scalar("Loss/train", train_loss, epoch)
@@ -281,7 +296,9 @@ def main():
     if args.model_type == "base":
         model = Base(128, args.eeg_exclusion_channel_num, 8)
     elif args.model_type == "channelnet":
-        model = EEmaGeChannelNet(eeg_exclusion_channel_num=args.eeg_exclusion_channel_num)
+        model = EEmaGeChannelNet(
+            eeg_exclusion_channel_num=args.eeg_exclusion_channel_num
+        )
 
     if args.resume:
         resume = True

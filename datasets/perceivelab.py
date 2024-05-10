@@ -34,7 +34,7 @@ from torchvision import transforms
 from PIL import Image
 import random
 
-import os
+import os, random
 
 time_low = 20
 time_high = 460
@@ -93,7 +93,14 @@ class Dataset(Dataset):
 
 
 class Splitter:
-    def __init__(self, dataset, split_path, split_name="train", shuffle=False, downstream_task=False):
+    def __init__(
+        self,
+        dataset,
+        split_path,
+        split_name="train",
+        shuffle=False,
+        downstream_task=False,
+    ):
         # Set EEG dataset
         self.dataset = dataset
         # Load split
@@ -123,3 +130,76 @@ class Splitter:
         eeg1, image1, eeg2, image2 = self.dataset[self.split_idx[i]]
         # Return
         return eeg1, image1, eeg2, image2
+
+
+class PerceivelabClassification(Dataset):
+    def __init__(self, eeg_data_path, image_data_path, model_type):
+        loaded = torch.load(eeg_data_path)
+        self.data = loaded["dataset"]
+
+        self.images = loaded["images"]
+        self.images = [
+            os.path.join(image_data_path, image[:9], image + ".JPEG")
+            for image in self.images
+        ]
+
+        self.idx_to_label = {key: value for key, value in enumerate(self.images)}
+        self.label_to_idx = {value: key for key, value in self.idx_to_label.items()}
+
+        self.model_type = model_type
+
+    def __len__(self):
+        return self.size
+
+    def __getitem__(self, idx):
+        eeg = self.data[idx]["eeg"].float().t()
+        eeg = eeg[time_low:time_high, :]
+        eeg = eeg.t()
+
+        image_index = int(self.data[idx]["image"])
+        label = self.label_to_idx[self.images[image_index]]
+
+        if self.model_type == "channelnet":
+            eeg = eeg.view(1, 128, time_high - time_low)
+
+        return eeg, label
+
+
+class ClassificationSplitter:
+    def __init__(
+        self,
+        dataset,
+        split_path,
+        split_name="train",
+        shuffle=False,
+        downstream_task=False,
+    ):
+        # Set EEG dataset
+        self.dataset = dataset
+        # Load split
+        loaded = torch.load(split_path)
+        split = loaded["splits"][0]
+        if downstream_task:
+            self.split_idx = split[split_name]
+        else:
+            if split_name == "train":
+                self.split_idx = split["train"] + split["val"]
+            else:
+                self.split_idx = split[split_name]
+
+        if shuffle and split_name == "train":
+            random.shuffle(self.dataset.images)
+
+        # Compute size
+        self.size = len(self.split_idx)
+
+    # Get size
+    def __len__(self):
+        return self.size
+
+    # Get item
+    def __getitem__(self, i):
+        # Get sample from dataset
+        eeg, label = self.dataset[self.split_idx[i]]
+        # Return
+        return eeg, label
