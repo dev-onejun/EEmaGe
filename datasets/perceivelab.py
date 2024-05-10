@@ -29,6 +29,7 @@ Citations
 
 import torch
 from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
 from torchvision import transforms
 from PIL import Image
 
@@ -57,6 +58,7 @@ class Dataset(Dataset):
         self.data = loaded["dataset"]
 
         self.images = loaded["images"]
+        self.data_label = [x["image"] for x in self.data]
         self.images = [
             os.path.join(image_data_path, image[:9], image + ".JPEG")
             for image in self.images
@@ -88,3 +90,26 @@ class Dataset(Dataset):
 
         # Return
         return eeg, image, eeg, image
+
+class Splitter:
+    def __init__(self, dataset, split_path, split_name="train"):
+        # Set EEG dataset
+        self.dataset = dataset
+        # Load split
+        loaded = torch.load(split_path)
+        split = loaded["splits"][0]
+        # print(split)
+        self.split_idx = split[split_name]
+        # Compute size
+        self.size = len(self.split_idx)
+
+    # Get size
+    def __len__(self):
+        return self.size
+
+    # Get item
+    def __getitem__(self, i):
+        # Get sample from dataset
+        eeg1, image1, eeg2, image2 = self.dataset[self.split_idx[i]]
+        # Return
+        return eeg1, image1, eeg2, image2

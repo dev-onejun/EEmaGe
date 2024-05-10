@@ -3,7 +3,7 @@ from torch import nn
 from torch.utils import data
 from torch.utils.tensorboard.writer import SummaryWriter
 
-from datasets import Dataset
+from datasets import Dataset, Splitter
 from models.base import Base
 from models.EEmaGeChannelNet import EEmaGeChannelNet
 from train_helpers import load_losses, save_losses
@@ -112,6 +112,12 @@ parser.add_argument(
     type=int,
     default=0,
     help="The number of unrelated EEG Channels (default: 0) (recommend: 0|17)",
+)
+parser.add_argument(
+    "--block-splits-path",
+    type=str,
+    default="./datasets/perceivelab-dataset/data/block_splits_by_image_all.pth",
+    help="the path for the block splits (default: ./datasets/perceivelab-dataset/data/block_splits_by_image_all.pth)",
 )
 
 args = parser.parse_args()
@@ -277,21 +283,12 @@ def main():
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
-    train_dataset = Dataset(args.eeg_train_data, args.image_data_path, args.model_type)
-    test_dataset = Dataset(args.eeg_test_data, args.image_data_path, args.model_type)
+    dataset = Dataset(args.eeg_train_data, args.image_data_path, args.model_type)
+    loaders = {split: data.DataLoader(Splitter(dataset, split_name=split, split_path=args.block_splits_path), batch_size=args.batch_size, shuffle=True, num_workers=args.number_workers) for split in ["train", "val", "test"]}
 
-    train_loader = data.DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        shuffle=True,
-        num_workers=args.number_workers,
-    )
-    test_loader = data.DataLoader(
-        test_dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.number_workers,
-    )
+    train_loader = loaders["train"]
+    test_loader = loaders["test"]
+    # val_loader = loaders["val"]
 
     train_losses, test_losses, model = train_ssl(
         train_loader,
