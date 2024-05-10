@@ -13,6 +13,7 @@ pathspec==0.12.1
 pillow==10.2.0
 platformdirs==4.2.0
 sympy==1.12
+tensorboard==2.16.2
 tomli==2.0.1
 torch==2.2.1
 torchaudio==2.2.1

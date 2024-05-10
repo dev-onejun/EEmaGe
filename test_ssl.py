@@ -4,7 +4,12 @@ from torch.utils import data
 from ignite.metrics import FID, InceptionScore
 
 from datasets import Dataset, Splitter
-from models import Base, EEmaGeChannelNet, BaseReconstructor, EEmaGeReconstructor
+from models import (
+    EEmaGeBase,
+    EEmaGeChannelNet,
+    EEmaGeBaseReconstructor,
+    EEmaGeChannelNetReconstructor,
+)
 from utils.args import get_test_ssl_arguments
 from utils.train_helpers import transform, process_large_dataset
 
@@ -35,12 +40,14 @@ def compute_matrix(model, test_loader):
 
 def main():
     if args.model_type == "base":
-        pretrained = Base(eeg_exclusion_channel_num=args.eeg_exclusion_channel_num)
+        pretrained = EEmaGeBase(
+            eeg_exclusion_channel_num=args.eeg_exclusion_channel_num
+        )
         pretrained.load_state_dict(
             torch.load(os.path.join(saved_models_dir, args.model_type + ".pt"))
         )
 
-        model = BaseReconstructor(
+        model = EEmaGeBaseReconstructor(
             eeg_exclusion_channel_num=args.eeg_exclusion_channel_num
         )
         model.eeg_feature_extractor = pretrained.eeg_feature_extractor
@@ -55,7 +62,7 @@ def main():
             torch.load(os.path.join(saved_models_dir, args.model_type + ".pt"))
         )
 
-        model = EEmaGeReconstructor()
+        model = EEmaGeChannelNetReconstructor()
         model.eeg_feature_extractor = pretrained.eeg_feature_extractor
         model.encoder = pretrained.encoder
         model.image_decoder = pretrained.image_decoder

@@ -4,7 +4,7 @@ from torch.utils import data
 from torch.utils.tensorboard.writer import SummaryWriter
 
 from datasets import Dataset, Splitter
-from models import Base, EEmaGeChannelNet
+from models import EEmaGeBase, EEmaGeChannelNet
 from utils.train_helpers import (
     load_losses,
     save_losses,
@@ -162,7 +162,7 @@ def train_ssl(train_loader, val_loader, model, n_epochs, lr, resume=False):
 
 def main():
     if args.model_type == "base":
-        model = Base(128, args.eeg_exclusion_channel_num, 8)
+        model = EEmaGeBase(128, args.eeg_exclusion_channel_num, 8)
     elif args.model_type == "channelnet":
         model = EEmaGeChannelNet(
             eeg_exclusion_channel_num=args.eeg_exclusion_channel_num
