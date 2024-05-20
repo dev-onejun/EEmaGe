@@ -4,7 +4,6 @@
 
 .vscode/
 
-runs/
 saved_models/
 
 datasets/perceivelab-dataset
