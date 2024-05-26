@@ -14,6 +14,8 @@ from utils.train_helpers import (
 from utils.args import get_train_ssl_arguments
 
 import os, random
+from copy import deepcopy
+from datetime import datetime
 
 
 def _eval_loss(model, val_loader, eeg_criterion, image_criterion):
@@ -100,6 +102,7 @@ def _train_val_loop(model, train_loader, val_loader, epochs, lr):
 
     train_losses, val_losses = [], []
 
+    best_epoch, best_loss, best_model_weights = 0, 0.0, None
     for epoch in range(1, epochs + 1):
         train_loss = _train_loss(
             model, train_loader, optimizer, eeg_criterion, image_criterion
@@ -120,7 +123,9 @@ def _train_val_loop(model, train_loader, val_loader, epochs, lr):
             torch.save(
                 model.state_dict(),
                 os.path.join(
-                    root, "saved_models", args.model_type + "_epoch{}.pt".format(epoch)
+                    root,
+                    "saved_models",
+                    args.model_type + "_epoch{}_{}.pt".format(epoch, datetime.now()),
                 ),
             )
             save_losses(
@@ -130,13 +135,31 @@ def _train_val_loop(model, train_loader, val_loader, epochs, lr):
                 args.save_losses + "_epoch{}".format(epoch),
             )
 
+        if val_loss < best_loss:
+            best_epoch, best_loss = epoch, val_loss
+            best_model_weights = deepcopy(model.state_dict())
+
         writer.add_scalar("Loss/train", train_loss, epoch)
         writer.add_scalar("Loss/val", val_loss, epoch)
 
         writer.flush()
 
     torch.save(
-        model.state_dict(), os.path.join(root, "saved_models", args.model_type + ".pt")
+        model.state_dict(),
+        os.path.join(
+            root,
+            "saved_models",
+            "final_{}_{}.pt".format(args.model_type, datetime.now()),
+        ),
+    )
+
+    print(f"\n\nBest Loss: {best_loss} at epoch {best_epoch}")
+    torch.save(
+        best_model_weights,
+        os.path.join(
+            "saved_models",
+            "best_{}_{}_{}.pt".format(args.model_type, best_epoch, datetime.now()),
+        ),
     )
 
     return train_losses, val_losses

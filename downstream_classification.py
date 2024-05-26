@@ -8,7 +8,9 @@ from utils.args import get_downstream_classification_arguments
 from models import EEmaGeClassifier
 from datasets.perceivelab import PerceivelabClassification, ClassificationSplitter
 
-import random
+import os, random
+from copy import deepcopy
+from datetime import datetime
 
 
 def train(model, train_dataloader, validate_dataloader):
@@ -17,6 +19,7 @@ def train(model, train_dataloader, validate_dataloader):
     )
     loss_fn = nn.CrossEntropyLoss()
 
+    best_epoch, best_accuracy, best_model_weights = 0, 0.0, None
     for epoch in range(1, args.epoch + 1):
         model.train()
 
@@ -32,7 +35,7 @@ def train(model, train_dataloader, validate_dataloader):
             loss.backward()
             optimizer.step()
 
-            train_epoch_loss += loss.item()
+            train_epoch_loss += loss.item() * label.size(0)
             predict = torch.argmax(output, dim=1)
             train_correct += (label == predict).sum().float()
 
@@ -46,17 +49,15 @@ def train(model, train_dataloader, validate_dataloader):
                 output = model(eeg)
                 loss = loss_fn(output, label)
 
-                validate_epoch_loss += loss.item()
+                validate_epoch_loss += loss.item() * label.size(0)
                 predict = torch.argmax(output, dim=1)
                 validate_correct += (label == predict).sum().float()
 
-        train_epoch_loss = train_epoch_loss / len(train_dataloader)
-        train_accuracy = train_correct / (len(train_dataloader) * args.batch_size) * 100
+        train_epoch_loss = train_epoch_loss / len(train_dataloader.dataset)
+        train_accuracy = train_correct / len(train_dataloader.dataset) * 100
 
-        validate_epoch_loss = validate_epoch_loss / len(validate_dataloader)
-        validate_accuracy = (
-            validate_correct / (len(validate_dataloader) * args.batch_size) * 100
-        )
+        validate_epoch_loss = validate_epoch_loss / len(validate_dataloader.dataset)
+        validate_accuracy = validate_correct / len(validate_dataloader.dataset) * 100
 
         print(
             f"Epoch {epoch + 1}\nTrain Accuracy: {train_accuracy:.4f}\tTrain Loss: {train_epoch_loss:.4f}\tValidate Accuracy: {validate_accuracy:.4f}\tValidate Loss: {validate_epoch_loss:.4f}"
@@ -68,7 +69,20 @@ def train(model, train_dataloader, validate_dataloader):
 
         writer.flush()
 
+        if validate_accuracy > best_accuracy:
+            best_epoch, best_accuracy = epoch, validate_accuracy
+            best_model_weights = deepcopy(model.state_dict())
+
     torch.save(model.state_dict(), "./saved_models/" + args.model_type + ".pt")
+
+    print(f"\n\nBest Accuracy: {best_accuracy} at epoch {best_epoch}")
+    torch.save(
+        best_model_weights,
+        os.path.join(
+            "./saved_models/",
+            "best_{}_{}_{}".format(args.model_type, best_epoch, datetime.now()),
+        ),
+    )
 
 
 def main():
