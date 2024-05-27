@@ -60,7 +60,7 @@ def train(model, train_dataloader, validate_dataloader):
         validate_accuracy = validate_correct / len(validate_dataloader.dataset) * 100
 
         print(
-            f"Epoch {epoch + 1}\nTrain Accuracy: {train_accuracy:.4f}\tTrain Loss: {train_epoch_loss:.4f}\tValidate Accuracy: {validate_accuracy:.4f}\tValidate Loss: {validate_epoch_loss:.4f}"
+            f"Epoch {epoch}\nTrain Accuracy: {train_accuracy:.4f}\tTrain Loss: {train_epoch_loss:.4f}\tValidate Accuracy: {validate_accuracy:.4f}\tValidate Loss: {validate_epoch_loss:.4f}"
         )
         writer.add_scalar("Loss/train", train_epoch_loss, epoch)
         writer.add_scalar("Loss/validate", validate_epoch_loss, epoch)
@@ -73,7 +73,10 @@ def train(model, train_dataloader, validate_dataloader):
             best_epoch, best_accuracy = epoch, validate_accuracy
             best_model_weights = deepcopy(model.state_dict())
 
-    torch.save(model.state_dict(), "./saved_models/" + args.model_type + ".pt")
+    torch.save(
+        model.state_dict(),
+        "./saved_models/{}_classification.pt".format(args.model_type),
+    )
 
     print(f"\n\nBest Accuracy: {best_accuracy} at epoch {best_epoch}")
     torch.save(
@@ -107,7 +110,8 @@ def main():
                 split_name=split,
                 split_path=args.block_splits_path,
                 shuffle=args.should_shuffle,
-                downstream_task=args.downstream_task,
+                # downstream_task=args.downstream_task,
+                downstream_task=False,
             ),
             batch_size=args.batch_size,
             shuffle=True,
@@ -116,7 +120,7 @@ def main():
         for split in ["train", "val", "test"]
     }
     train_dataloader = loaders["train"]
-    validate_dataloader = loaders["val"]
+    validate_dataloader = loaders["test"]
 
     train(model, train_dataloader, validate_dataloader)
 
