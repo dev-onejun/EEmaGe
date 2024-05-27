@@ -128,17 +128,20 @@ class Splitter:
 class PerceivelabClassification(Dataset):
     def __init__(self, eeg_data_path, image_data_path, model_type):
         loaded = torch.load(eeg_data_path)
-        self.data = loaded["dataset"]
 
+        self.data = loaded["dataset"]
         self.images = loaded["images"]
+        self.labels = loaded["labels"]
+
+        self.idx_to_label = {key: value[:9] for key, value in enumerate(self.labels)}
+        self.label_to_idx = {value: key for key, value in self.idx_to_label.items()}
+
         self.images = [
             os.path.join(image_data_path, image[:9], image + ".JPEG")
             for image in self.images
         ]
 
-        self.idx_to_label = {key: value for key, value in enumerate(self.images)}
-        self.label_to_idx = {value: key for key, value in self.idx_to_label.items()}
-
+        self.size = len(self.data)
         self.model_type = model_type
 
     def __len__(self):
@@ -149,8 +152,9 @@ class PerceivelabClassification(Dataset):
         eeg = eeg[time_low:time_high, :]
         eeg = eeg.t()
 
-        image_index = int(self.data[idx]["image"])
-        label = self.label_to_idx[self.images[image_index]]
+        image_index = int(self.data[idx]["label"])
+        # label = self.label_to_idx[self.images[image_index]]
+        label = self.label_to_idx[self.labels[image_index]]
 
         if self.model_type == "channelnet":
             eeg = eeg.view(1, 128, time_high - time_low)
@@ -200,3 +204,23 @@ class ClassificationSplitter:
 
         # Return
         return eeg, label
+
+
+if __name__ == "__main__":
+    dataset = PerceivelabClassification(
+        "./perceivelab-dataset/data/eeg_55_95_std.pth",
+        "./imagenet-dataset/train",
+        "channelnet",
+    )
+
+    print(dataset.labels)
+    print(dataset.idx_to_label.keys())
+
+    """
+    from torch.utils import data
+
+    dataloader = data.DataLoader(dataset)
+    labels = []
+    for eeg, label in dataloader:
+        print(label, end=" ")
+        """

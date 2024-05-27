@@ -126,9 +126,9 @@ class EEmaGeClassifier(nn.Module):
             param.requires_grad = False
 
         self.classifier = nn.Sequential(
-            nn.Linear(1024, 1996),
+            nn.Linear(1024, 40),
             nn.ReLU(),
-            nn.Linear(1996, 1996),
+            nn.Linear(40, 40),
         )
 
     def forward(self, x):
