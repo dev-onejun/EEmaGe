@@ -112,7 +112,7 @@ class EEmaGeClassifier(nn.Module):
 
         model = (
             EEmaGeBase(128, eeg_exclusion_channel_num, 8)
-            if model_type == "Base"
+            if model_type == "base"
             else EEmaGeChannelNet(eeg_exclusion_channel_num=eeg_exclusion_channel_num)
         )
         model.load_state_dict(torch.load(pretrained_model_path))
@@ -126,9 +126,9 @@ class EEmaGeClassifier(nn.Module):
             param.requires_grad = False
 
         self.classifier = nn.Sequential(
-            nn.Linear(1024, 40),
+            nn.Linear(1024, 1024),
             nn.ReLU(),
-            nn.Linear(40, 40),
+            nn.Linear(1024, 40),
         )
 
     def forward(self, x):
