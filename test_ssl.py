@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.utils import data
 from ignite.metrics import FID, InceptionScore
+from torchvision.transforms import ToPILImage
 
 from datasets import Dataset, Splitter
 from models import (
@@ -24,6 +25,8 @@ def compute_matrix(model, test_loader):
     matrix_fid.reset()
     # matrix_is.reset()
 
+    to_pil = ToPILImage()
+    i = 1
     model.eval()
     with torch.no_grad():
         for data in process_large_dataset(test_loader):
@@ -34,6 +37,11 @@ def compute_matrix(model, test_loader):
 
             matrix_fid.update((image_out, image_y))
             # matrix_is.update((image_out, image_y))
+
+            for image in image_out:
+                pil_image = to_pil(image)
+                pil_image.save(f"{generated_images_dir}/{i}.png")
+                i += 1
 
     return matrix_fid.compute()  # , matrix_is.compute()
 
@@ -98,6 +106,8 @@ root = os.path.dirname(__file__)
 saved_models_dir = os.path.join(root, "saved_models")
 if not os.path.exists(saved_models_dir):
     sys.exit(f"Directory {saved_models_dir} does not exist.")
+generated_images_dir = os.path.join(root, "generated_images")
+os.makedirs(generated_images_dir, exist_ok=True)
 
 
 args = get_test_ssl_arguments()
