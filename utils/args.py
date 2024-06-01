@@ -25,12 +25,37 @@ def get_test_ssl_arguments():
         help="input batch size for training (default: 32)",
     )
     parser.add_argument(
+        "--epoch",
+        "-e",
+        type=int,
+        default=100,
+        help="Epoch. Default: 100",
+    )
+    parser.add_argument(
         "--number-workers",
         "-n",
         type=int,
         default=16,
         metavar="N",
         help="number of works to load dataset (default: 16)",
+    )
+    parser.add_argument(
+        "--should-shuffle",
+        type=bool,
+        default=False,
+        help="should shuffle the images of dataset (default: False)",
+    )
+    parser.add_argument(
+        "--downstream-task",
+        type=bool,
+        default=False,
+        help="Execute for downstream task (default: False)",
+    )
+    parser.add_argument(
+        "--eeg-train-data",
+        type=str,
+        default="./datasets/perceivelab-dataset/data/eeg_55_95_std.pth",
+        help="the path for the root directory of the training dataset (default: ./datasets/perceivelab-dataset/data/eeg_55_95_std.pth)",
     )
     parser.add_argument(
         "--eeg-test-data",
