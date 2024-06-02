@@ -32,7 +32,7 @@ def matplotlib_imshow(img):
 
 
 # TODO: is 적용을 위한 생성 파라미터 찾아볼 것
-def compute_matrix(model, test_loader, writer):
+def compute_matrix(model, test_loader, writer, step):
     matrix_fid = FID()
 
     matrix_fid.reset()
@@ -50,7 +50,7 @@ def compute_matrix(model, test_loader, writer):
 
     img_grid = make_grid(sample_images)
     matplotlib_imshow(img_grid)
-    writer.add_image("EEmaGe", img_grid)
+    writer.add_image("EEmaGe", img_grid, step)
 
     return matrix_fid.compute()  # , matrix_is.compute()
 
@@ -81,7 +81,7 @@ def train(model, train_dataloader, test_dataloader):
 
             step += 1
             if step % 100 == 0:
-                cur_fid = compute_matrix(model, test_dataloader, writer)
+                cur_fid = compute_matrix(model, test_dataloader, writer, step)
                 print(f"FID @ step {step}: {cur_fid}")
 
                 if cur_fid > best_fid:
