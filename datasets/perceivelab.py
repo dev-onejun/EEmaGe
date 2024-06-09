@@ -153,7 +153,6 @@ class PerceivelabClassification(Dataset):
         eeg = eeg.t()
 
         image_index = int(self.data[idx]["label"])
-        # label = self.label_to_idx[self.images[image_index]]
         label = self.label_to_idx[self.labels[image_index]]
 
         if self.model_type == "channelnet":
@@ -207,20 +206,54 @@ class ClassificationSplitter:
 
 
 if __name__ == "__main__":
+    import sys
+    from os import path
+
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    from utils.train_helpers import transform
+
     dataset = PerceivelabClassification(
         "./perceivelab-dataset/data/eeg_55_95_std.pth",
         "./imagenet-dataset/train",
         "channelnet",
+        # transform=transform,
     )
 
-    print(dataset.labels)
-    print(dataset.idx_to_label.keys())
-
-    """
     from torch.utils import data
 
-    dataloader = data.DataLoader(dataset)
-    labels = []
-    for eeg, label in dataloader:
-        print(label, end=" ")
-        """
+    loaders = {
+        split: data.DataLoader(
+            ClassificationSplitter(
+                dataset,
+                split_name=split,
+                split_path="./perceivelab-dataset/data/block_splits_by_image_all.pth",
+                shuffle=False,
+                downstream_task=False,
+            ),
+            batch_size=32,
+            shuffle=False,
+            num_workers=8,
+        )
+        for split in ["train", "val", "test"]
+    }
+
+    train_loader = loaders["train"]
+    test_loader = loaders["test"]
+
+    labels: torch.Tensor = None
+    for eeg, label in test_loader:
+        labels = label
+
+    for label in labels:
+        label = int(label)
+        label = dataset.idx_to_label[label]
+        print(f"LABEL: {label}")
+
+    print()
+    for eeg, label in test_loader:
+        labels = label
+
+    for label in labels:
+        label = int(label)
+        label = dataset.idx_to_label[label]
+        print(f"LABEL: {label}")

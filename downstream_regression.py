@@ -1,8 +1,13 @@
 from copy import deepcopy
+import numpy as np
 import torch
 from torch import nn
 from torch.utils import data
-from ignite.metrics import FID, InceptionScore
+
+# from ignite.metrics import FID, InceptionScore
+from torchmetrics.image.inception import InceptionScore
+from torchmetrics.image.fid import FrechetInceptionDistance
+
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchvision.transforms import ToPILImage
 from torchvision.utils import make_grid
@@ -19,23 +24,22 @@ from utils.train_helpers import transform, process_large_dataset
 
 import sys, os, random
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 
 def matplotlib_imshow(img):
-    img = img.mean(dim=0)
-    img = img / 2 + 0.5
-    npimg = img.cpu().numpy()
+    img = to_pil(img)
 
-    plt.imshow(npimg)
+    plt.imshow(img)
 
 
 # TODO: is 적용을 위한 생성 파라미터 찾아볼 것
 def compute_matrix(model, test_loader, writer, step):
-    matrix_fid = FID()
+    # matrix_fid = FID(device=device)
+    matric_fid = FrechetInceptionDistance(feature=2048)
+    matric_is = InceptionScore()
 
-    matrix_fid.reset()
+    # matrix_fid.reset()
     model.eval()
     sample_images = None
     with torch.no_grad():
@@ -44,7 +48,23 @@ def compute_matrix(model, test_loader, writer, step):
             eeg_x, image_y = tuple(b.to(device, dtype=torch.float) for b in batch)
             image_out = model(eeg_x)
 
-            matrix_fid.update((image_out, image_y))
+            # matrix_fid.update((image_out, image_y))
+            out, true = [], []
+            for image, y in zip(image_out, image_y):
+                image = (image * 255).to(torch.uint8).cpu()
+                y = (y * 255).to(torch.uint8).cpu()
+
+                out.append(image)
+                true.append(y)
+
+            out, true = np.array(out), np.array(true)
+            out = torch.Tensor(out).to(dtype=torch.uint8)
+            true = torch.Tensor(true).to(dtype=torch.uint8)
+
+            # pdb.set_trace()
+            matric_is.update(out)
+            matric_fid.update(true, real=True)
+            matric_fid.update(out, real=False)
 
             sample_images = image_out
 
@@ -52,7 +72,7 @@ def compute_matrix(model, test_loader, writer, step):
     matplotlib_imshow(img_grid)
     writer.add_image("EEmaGe", img_grid, step)
 
-    return matrix_fid.compute()  # , matrix_is.compute()
+    return matric_is.compute(), matric_fid.compute()
 
 
 def train(model, train_dataloader, test_dataloader):
@@ -77,7 +97,7 @@ def train(model, train_dataloader, test_dataloader):
             loss.backward()
             optimizer.step()
 
-            train_epoch_loss += loss.item()
+            train_epoch_loss += loss.item() * eeg.size(0)
 
             step += 1
             if step % 100 == 0:
@@ -89,6 +109,12 @@ def train(model, train_dataloader, test_dataloader):
                     best_model_weights = deepcopy(model.state_dict())
 
                 model.train()
+
+        train_epoch_loss = train_epoch_loss / len(train_dataloader.dataset)
+        print(f"LOSS @ epoch {epoch}: {train_epoch_loss}")
+        writer.add_scalar("train_loss/epoch", train_epoch_loss, epoch)
+
+    writer.flush()
 
     print(f"Best FID: {best_fid} @ epoch {best_epoch}, step {best_step}")
     torch.save(
@@ -159,7 +185,7 @@ def main():
                 downstream_task=args.downstream_task,
             ),
             batch_size=args.batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=args.number_workers,
         )
         for split in ["train", "val", "test"]
@@ -168,7 +194,10 @@ def main():
     train_loader = loaders["train"]
     test_loader = loaders["test"]
 
-    train(model, train_loader, test_loader)
+    # train(model, train_loader, test_loader)
+    writer = SummaryWriter()
+    is_score, fid_score = compute_matrix(model, test_loader, writer, 0)
+    print(f"IS: {is_score}\tFID: {fid_score}")
 
 
 root = os.path.dirname(__file__)

@@ -155,14 +155,20 @@ class EEmaGeBaseReconstructor(nn.Module):
             feature_num,
             self.ENCODER_INPUT_DIM,
         )
+        for _, param in self.eeg_feature_extractor.named_parameters():
+            param.requires_grad = False
 
         self.encoder = Encoder(
             self.ENCODER_INPUT_DIM,
             self.ENCODER_INPUT_DIM // 2,
             (self.ENCODER_INPUT_DIM // 2) // 2,
         )
+        for _, param in self.encoder.named_parameters():
+            param.requires_grad = False
 
         self.image_decoder = ImageDecoder()
+        for name, param in self.image_decoder.named_parameters():
+            param.requires_grad = False
 
     def forward(self, eeg):
         eeg_features = self.eeg_feature_extractor(eeg)
@@ -184,14 +190,20 @@ class EEmaGeChannelNetReconstructor(nn.Module):
         self.eeg_feature_extractor = nn.Sequential(
             EEGFeaturesExtractor(), nn.Linear(500, input_dim), nn.ReLU(True)
         )
+        for _, param in self.eeg_feature_extractor.named_parameters():
+            param.requires_grad = False
 
         self.encoder = Encoder(
             input_dim,
             hidden_dim1,
             hidden_dim2,
         )
+        for _, param in self.encoder.named_parameters():
+            param.requires_grad = False
 
         self.image_decoder = ImageDecoder()
+        for name, param in self.image_decoder.named_parameters():
+            param.requires_grad = False
 
     def forward(self, eeg):
         eeg_features = self.eeg_feature_extractor(eeg)
