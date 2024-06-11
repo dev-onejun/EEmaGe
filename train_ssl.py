@@ -38,7 +38,7 @@ def _eval_loss(model, val_loader, eeg_criterion, image_criterion):
 
             eeg_loss = eeg_criterion(eeg_out, eeg_y)
             image_loss = image_criterion(image_out, image_y)
-            loss = eeg_loss + image_loss
+            loss = 0.5 * eeg_loss + 0.5 * image_loss
 
             running_loss += loss.item()
 
@@ -70,7 +70,7 @@ def _train_loss(model, train_loader, optimizer, eeg_criterion, image_criterion):
 
         eeg_loss = eeg_criterion(eeg_out, eeg_y)
         image_loss = image_criterion(image_out, image_y)
-        loss = eeg_loss + image_loss
+        loss = 0.5 * eeg_loss + 0.5 * image_loss
 
         loss.backward()
         optimizer.step()
@@ -102,7 +102,7 @@ def _train_val_loop(model, train_loader, val_loader, epochs, lr):
 
     train_losses, val_losses = [], []
 
-    best_epoch, best_loss, best_model_weights = 0, 0.0, None
+    best_epoch, best_loss, best_model_weights = 0, float("inf"), None
     for epoch in range(1, epochs + 1):
         train_loss = _train_loss(
             model, train_loader, optimizer, eeg_criterion, image_criterion
