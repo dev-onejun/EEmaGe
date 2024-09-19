@@ -40,12 +40,12 @@ $$
 ## I. Introduction
 
 <!--WHY IS SUPERVISION NOT REQUIRED TO CONSTRUCT HUMAN VISUAL SYSTEM?-->
-Objects always exist regardless of someone's perception. This influenced that the definitions of looking, seeing, and watching are different. Looking is to toward eyes somewhere, seeing is to perceive things what eyes direct, and watching is to spend time and pay attention to the things [4]. In other words, 'looking' belongs to the 'seeing' set and 'seeing' belongs to the 'watching' set. The visual system of humans performs looking, meaning that, supervision is not required to imitate the system. <!--IS VISUAL RECONSTRUCTION TASK SAME AS LOOKING(-VISUAL SYSTEM)?-->
+Objects always exist regardless of someone's perception. This influenced that the definitions of looking, seeing, and watching are different. Looking is to toward eyes somewhere, seeing is to perceive things what eyes direct, and watching is to spend time and pay attention to the things [4](#mjx-eqn-4). In other words, 'looking' belongs to the 'seeing' set and 'seeing' belongs to the 'watching' set. The visual system of humans performs looking, meaning that, supervision is not required to imitate the system. <!--IS VISUAL RECONSTRUCTION TASK SAME AS LOOKING(-VISUAL SYSTEM)?-->
 
-BCI, firstly proposed by Vidal [10], has seeked to the key of the human brain where the area has yet been conquered. Disabled people are expected to be benefited to live real lives with others, if BCI researches continuously evolve. Among the methodlogies of BCIs, EEG analysis has especially been drawn attention due to its advantages, non-invasive and cost-effectie sensors which are utilized during brain measurements. The analysis, which uses a signal recorded electrical activities of brains [5], is pervasively adopted in medical and research areas to diagnose brain diseases. Even though its effectiveness in those areas, EEG required manual analysis of experts like physicians and researchers [11].
+BCI, firstly proposed by Vidal [10](#mjx-eqn-10), has seeked to the key of the human brain where the area has yet been conquered. Disabled people are expected to be benefited to live real lives with others, if BCI researches continuously evolve. Among the methodlogies of BCIs, EEG analysis has especially been drawn attention due to its advantages, non-invasive and cost-effectie sensors which are utilized during brain measurements. The analysis, which uses a signal recorded electrical activities of brains [5](#mjx-eqn-5), is pervasively adopted in medical and research areas to diagnose brain diseases. Even though its effectiveness in those areas, EEG required manual analysis of experts like physicians and researchers [11](#mjx-eqn-11).
 
 
-AI has been adnvaced with imitating the system of human beings. For instance, Neural Network [1] mimicked the human nervous system as well as its advancement like CNN [2] and SWNet [3] (imitate/mimic/resemble).
+AI has been adnvaced with imitating the system of human beings. For instance, Neural Network [1](#mjx-eqn-1) mimicked the human nervous system as well as its advancement like CNN [2](#mjx-eqn-2) and SWNet [3](#mjx-eqn-3) (imitate/mimic/resemble).
 
 
 Aligning with AI technologies, many researches founded that EEG is able to reproduce visual experiences with deep learning algorithms.
@@ -75,26 +75,26 @@ A few methods to measure brain signals exist such as fMRI, NIRS, MEG, and EEG. E
 
 On the other hand, EEG is .
 
-The EEG brain waves are categorized by their frequency into four different groups, beta ( > 13Hz), alpha (8-13Hz), theta (4-8Hz), and delta (0.5-4Hz) [5]. *Gamma ? in Palazzo.* While an alpha wave dominates the brain waves during the activities that the eyes are closed, a beta wave is activated when the eyes are opened.
+The EEG brain waves are categorized by their frequency into four different groups, beta ( > 13Hz), alpha (8-13Hz), theta (4-8Hz), and delta (0.5-4Hz) [5](#mjx-eqn-5). *Gamma ? in Palazzo.* While an alpha wave dominates the brain waves during the activities that the eyes are closed, a beta wave is activated when the eyes are opened.
 
 #### B. EEG-Image Pair Datasets
 
-<!--[13] is a imaginary image task while collecting EEG dataset so that emerged EEG can be different from the stimuli of the vision. (The activated part ? the signal frequency ?) of the brain is different in vision and imaginary. Specifically, the research used speech recognition dataset collected by another research which participants were thought one of the 10 digits (0-9) Alpha activity is induced by thinking while perceivelab shows 55/95.-->
+<!--[13](#mjx-eqn-13) is a imaginary image task while collecting EEG dataset so that emerged EEG can be different from the stimuli of the vision. (The activated part ? the signal frequency ?) of the brain is different in vision and imaginary. Specifically, the research used speech recognition dataset collected by another research which participants were thought one of the 10 digits (0-9) Alpha activity is induced by thinking while perceivelab shows 55/95.-->
 
-In the task of visual reconstruction, three qualified datasets are available. Yet, Thoughtviz [13] dataset, originated from Kumar, et al. [14] which collected an EEG dataset for the speech recognition task, utilized imaginary images of participants. The dataset collected by relying on the thought of the participants has an alpha wave data induced by thinking. In fact, the EEG beta waves are dominant while the eyes open [5]. Palazzo, et al [6] collected the pairs of EEG and image data from six participants. The ImageNet subset, consisting of fifty images per class where the number of the class is forty, were selected by those researchers. Consequently, 12,000 EEG sequences (2000 images * 6 participants) were gathered via 128 EEG channels. Few sequences were excluded through preprocessing so that 11,466 were valid to account for the opened dataset.
+In the task of visual reconstruction, three qualified datasets are available. Yet, Thoughtviz [13](#mjx-eqn-13) dataset, originated from Kumar, et al. [14](#mjx-eqn-14) which collected an EEG dataset for the speech recognition task, utilized imaginary images of participants. The dataset collected by relying on the thought of the participants has an alpha wave data induced by thinking. In fact, the EEG beta waves are dominant while the eyes open [5](#mjx-eqn-5). Palazzo, et al [6](#mjx-eqn-6) collected the pairs of EEG and image data from six participants. The ImageNet subset, consisting of fifty images per class where the number of the class is forty, were selected by those researchers. Consequently, 12,000 EEG sequences (2000 images * 6 participants) were gathered via 128 EEG channels. Few sequences were excluded through preprocessing so that 11,466 were valid to account for the opened dataset.
 
-[12]
+[12](#mjx-eqn-12)
 
 #### C. Visual Reconstruction With AI
 
-Palazzo et al [6] firstly founded that visual experience can be generated from EEG signals. The research recorded the signals while presenting the subset of ImageNet [7] dataset to subjects. Although the research firstly founded that visual experience can be generated from EEG signals, the proposed method were limited to the dataset category since it relied on supervised learning.
+Palazzo et al [6](#mjx-eqn-6) firstly founded that visual experience can be generated from EEG signals. The research recorded the signals while presenting the subset of ImageNet [7](#mjx-eqn-7) dataset to subjects. Although the research firstly founded that visual experience can be generated from EEG signals, the proposed method were limited to the dataset category since it relied on supervised learning.
 NeuroVision
 
 ## III. Methodology
 
 #### A. Dataset Usages
 
-Hinged on the fact that the beta wave is required to reconstruct visual stimuli as same as possible, Perceivelab-Dataset [6] is well-suited for the purpose of this work.
+Hinged on the fact that the beta wave is required to reconstruct visual stimuli as same as possible, Perceivelab-Dataset [6](#mjx-eqn-6) is well-suited for the purpose of this work.
 
 #### B. EEmaGe
 
@@ -131,19 +131,18 @@ The novel framework, EEmaGe, has successfully reconstructed human vision. EEmaGe
 
 ## References
 
-$\tag*{}\label{1} \text{[1] McCulloch, Warren S., and Walter Pitts. "A logical calculus of the ideas immanent in nervous activity." The bulletin of mathematical}\\\text{ biophysics 5 (1943): 115-133. [MLA]}$
-$\tag*{}\label{2} \text{[2] Fukushima, Kunihiko. "Neocognitron: A self-organizing neural network model for a mechanism of pattern recognition unaffected by shift}\\\text{ in position." Biological cybernetics 36.4 (1980): 193-202. [MLA]}$
-$\tag*{}\label{3} \text{[3] Javaheripi, Mojan, Bita Darvish Rouhani, and Farinaz Koushanfar. "SWNet: Small-world neural networks and rapid convergence." }\\\text{arXiv preprint arXiv:1904.04862 (2019). [MLA]}$
-$\tag*{}\label{4} \text{[4] https://www.britannica.com/dictionary/eb/qa/see-look-watch-hear-and-listen , accessed in Mar 4 2024. []}$
-$\tag*{}\label{5} \text{[5] Teplan, Michal. "Fundamentals of EEG measurement." Measurement science review 2.2 (2002): 1-11. [MLA]}$
-$\tag*{}\label{6} \text{[6] S. Palazzo, C. Spampinato, I. Kavasidis, D. Giordano and M. Shah, "Generative Adversarial Networks Conditioned by Brain Signals," }\\\text{2017 IEEE International Conference on Computer Vision (ICCV), Venice, Italy, 2017, pp. 3430-3438, doi: 10.1109/ICCV.2017.369. [IEEE]}$
-$\tag*{}\label{7} \text{[7] J. Deng, W. Dong, R. Socher, L. -J. Li, Kai Li and Li Fei-Fei, "ImageNet: A large-scale hierarchical image database," 2009 IEEE }\\\text{Conference on Computer Vision and Pattern Recognition, Miami, FL, USA, 2009, pp. 248-255, doi: 10.1109/CVPR.2009.5206848. [IEEE]}$
-$\tag*{}\label{8} \text{[8] Khare, Sanchita, et al. "NeuroVision: perceived image regeneration using cProGAN." Neural Computing and Applications 34.8 (2022):}\\\text{ 5979-5991. [MLA]}$
-$\tag*{}\label{9} \text{[9] P. Singh, P. Pandey, K. Miyapuram and S. Raman, "EEG2IMAGE: Image Reconstruction from EEG Brain Signals," ICASSP 2023 - 2023 }\\\text{IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Rhodes Island, Greece, 2023, pp. 1-5, }\\\text{doi: 10.1109/ICASSP49357.2023.10096587. [IEEE]}$
-$\tag*{}\label{10} \text{[10] Vidal, Jacques J. "Toward direct brain-computer communication." Annual review of Biophysics and Bioengineering 2.1 (1973): 157-180. [MLA]}$
-$\tag*{}\label{11} \text{[11] https://www.kaggle.com/competitions/hms-harmful-brain-activity-classification/overview , accessed in Mar 4 2024. []}$
-$\tag*{}\label{12} \text{[12] Kaneshiro B, Perreau Guimaraes M, Kim HS, Norcia AM, and Suppes P (2015). EEG data analyzed in "A Representational Similarity }\\\text{Analysis of the Dynamics of Object Processing Using Single-Trial EEG Classification". Stanford Digital Repository. }\\\text{Available at: http://purl.stanford.edu/bq914sc3730 [Dataset]}$
-$\tag*{}\label{13} \text{[13] Tirupattur, Praveen, et al. "Thoughtviz: Visualizing human thoughts using generative adversarial network." Proceedings of the 26th }\\\text{ACM international conference on Multimedia. 2018. [MLA]}$
-$\tag*{}\label{14} \text{[14] Kumar, Pradeep, et al. "Envisioned speech recognition using EEG sensors." Personal and Ubiquitous Computing 22 (2018): 185-199. [MLA]}$
-$\tag*{}\label{15} \text{}$
-
+$$\tag*{}\label{1} \text{[1] McCulloch, Warren S., and Walter Pitts. "A logical calculus of the ideas immanent in nervous activity." The bulletin of mathematical}\\\text{ biophysics 5 (1943): 115-133. [MLA]}$$
+$$\tag*{}\label{2} \text{[2] Fukushima, Kunihiko. "Neocognitron: A self-organizing neural network model for a mechanism of pattern recognition unaffected by shift}\\\text{ in position." Biological cybernetics 36.4 (1980): 193-202. [MLA]}$$
+$$\tag*{}\label{3} \text{[3] Javaheripi, Mojan, Bita Darvish Rouhani, and Farinaz Koushanfar. "SWNet: Small-world neural networks and rapid convergence." }\\\text{arXiv preprint arXiv:1904.04862 (2019). [MLA]}$$
+$$\tag*{}\label{4} \text{[4] https://www.britannica.com/dictionary/eb/qa/see-look-watch-hear-and-listen , accessed in Mar 4 2024. []}$$
+$$\tag*{}\label{5} \text{[5] Teplan, Michal. "Fundamentals of EEG measurement." Measurement science review 2.2 (2002): 1-11. [MLA]}$$
+$$\tag*{}\label{6} \text{[6] S. Palazzo, C. Spampinato, I. Kavasidis, D. Giordano and M. Shah, "Generative Adversarial Networks Conditioned by Brain Signals," }\\\text{2017 IEEE International Conference on Computer Vision (ICCV), Venice, Italy, 2017, pp. 3430-3438, doi: 10.1109/ICCV.2017.369. [IEEE]}$$
+$$\tag*{}\label{7} \text{[7] J. Deng, W. Dong, R. Socher, L. -J. Li, Kai Li and Li Fei-Fei, "ImageNet: A large-scale hierarchical image database," 2009 IEEE }\\\text{Conference on Computer Vision and Pattern Recognition, Miami, FL, USA, 2009, pp. 248-255, doi: 10.1109/CVPR.2009.5206848. [IEEE]}$$
+$$\tag*{}\label{8} \text{[8] Khare, Sanchita, et al. "NeuroVision: perceived image regeneration using cProGAN." Neural Computing and Applications 34.8 (2022):}\\\text{ 5979-5991. [MLA]}$$
+$$\tag*{}\label{9} \text{[9] P. Singh, P. Pandey, K. Miyapuram and S. Raman, "EEG2IMAGE: Image Reconstruction from EEG Brain Signals," ICASSP 2023 - 2023 }\\\text{IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Rhodes Island, Greece, 2023, pp. 1-5, }\\\text{doi: 10.1109/ICASSP49357.2023.10096587. [IEEE]}$$
+$$\tag*{}\label{10} \text{[10] Vidal, Jacques J. "Toward direct brain-computer communication." Annual review of Biophysics and Bioengineering 2.1 (1973): 157-180. [MLA]}$$
+$$\tag*{}\label{11} \text{[11] https://www.kaggle.com/competitions/hms-harmful-brain-activity-classification/overview , accessed in Mar 4 2024. []}$$
+$$\tag*{}\label{12} \text{[12] Kaneshiro B, Perreau Guimaraes M, Kim HS, Norcia AM, and Suppes P (2015). EEG data analyzed in "A Representational Similarity }\\\text{Analysis of the Dynamics of Object Processing Using Single-Trial EEG Classification". Stanford Digital Repository. }\\\text{Available at: http://purl.stanford.edu/bq914sc3730 [Dataset]}$$
+$$\tag*{}\label{13} \text{[13] Tirupattur, Praveen, et al. "Thoughtviz: Visualizing human thoughts using generative adversarial network." Proceedings of the 26th }\\\text{ACM international conference on Multimedia. 2018. [MLA]}$$
+$$\tag*{}\label{14} \text{[14] Kumar, Pradeep, et al. "Envisioned speech recognition using EEG sensors." Personal and Ubiquitous Computing 22 (2018): 185-199. [MLA]}$$
+$$\tag*{}\label{15} \text{}$$
